@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚡ 能源分類圖鑑 | 互動學習小遊戲</title>
+    <meta name="description" content="透過簡單的拖曳互動，認識再生能源與非再生能源的分類！適合教學使用的互動網頁。">
+    
+    <!-- Open Graph for Social Sharing -->
+    <meta property="og:title" content="能源分類圖鑑">
+    <meta property="og:description" content="快來建立你的能源圖鑑！分辨再生與非再生能源。">
+    <meta property="og:type" content="website">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-bg: #f0f4f8;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --text-sub: #7f8c8d;
+            --success: #27ae60;
+            --warning: #e67e22;
+            --danger: #e74c3c;
+            --renewable-bg: #e8f5e9;
+            --renewable-border: #a5d6a7;
+            --nonrenewable-bg: #eceff1;
+            --nonrenewable-border: #b0bec5;
+            --info-bg: #e3f2fd;
+            --info-text: #1565c0;
+        }
+
+        /* 全域設定 */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans TC', "Microsoft JhengHei", sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 遊戲主容器 */
+        #energy-sorter-game {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+            margin: 20px;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 標題區 */
+        .es-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .es-title {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .es-score-board {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--warning);
+            background: #fff3e0;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        /* 資訊/指令區塊 - 這裡會動態變更內容 */
+        .es-info-box {
+            text-align: center;
+            min-height: 80px; /* 固定高度避免跳動 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px solid #eee;
+            transition: all 0.3s;
+        }
+
+        .es-info-box.active {
+            background: var(--info-bg);
+            border-color: #90caf9;
+            color: var(--info-text);
+            box-shadow: 0 4px 10px rgba(33, 150, 243, 0.1);
+        }
+
+        .es-instruction-text { font-size: 1rem; color: var(--text-sub); line-height: 1.5; }
+        .es-description-text { font-size: 1.1rem; font-weight: bold; line-height: 1.4; display: none; }
+
+        /* 遊戲區域佈局調整 */
+        .es-game-area {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* 分類盒容器 (現在在上方) */
+        .es-bins-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        /* 盒子樣式 */
+        .es-bin {
+            flex: 1;
+            border-radius: 16px;
+            border: 3px solid transparent;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            background: #f9f9f9;
+        }
+
+        .es-bin-header {
+            text-align: center;
+            padding: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            border-radius: 13px 13px 0 0;
+            background: rgba(255,255,255,0.4);
+        }
+
+        .es-bin-title { font-weight: 700; font-size: 1.1rem; margin-top: 5px; }
+        .es-bin-sub { font-size: 0.85rem; font-weight: normal; opacity: 0.8; margin-top: 2px; }
+        .es-bin-icon { font-size: 28px; }
+
+        .es-bin-renewable { background: var(--renewable-bg); border-color: var(--renewable-border); color: #2e7d32; }
+        .es-bin-renewable.hover { background: #c8e6c9; transform: scale(1.02); box-shadow: 0 0 20px rgba(76, 175, 80, 0.4); }
+
+        .es-bin-nonrenewable { background: var(--nonrenewable-bg); border-color: var(--nonrenewable-border); color: #455a64; }
+        .es-bin-nonrenewable.hover { background: #cfd8dc; transform: scale(1.02); box-shadow: 0 0 20px rgba(96, 125, 139, 0.4); }
+
+        .es-collection-zone {
+            flex: 1; padding: 15px;
+            display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 10px;
+        }
+
+        /* 卡牌池 (現在在下方) */
+        .es-pool {
+            min-height: 140px;
+            background: #fafafa;
+            border: 2px dashed #bdc3c7;
+            border-radius: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            gap: 12px;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+        
+        /* 當遊戲完成時，卡池變成結果區的樣式 */
+        .es-pool.success-mode {
+            background: #2c3e50;
+            border: none;
+            color: white;
+            flex-direction: column;
+        }
+
+        /* 卡牌樣式 */
+        .es-card {
+            width: 85px; height: 90px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            cursor: grab;
+            border: 1px solid #eee;
+            transition: transform 0.2s, box-shadow 0.2s;
+            z-index: 100;
+            touch-action: none;
+        }
+
+        .es-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .es-card:active { cursor: grabbing; transform: scale(1.05); }
+        .es-card.dragging { opacity: 0.6; transform: scale(1.1); box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
+
+        .es-card-icon { font-size: 32px; margin-bottom: 5px; pointer-events: none; }
+        .es-card-name { font-size: 14px; font-weight: bold; color: var(--text-main); pointer-events: none; }
+
+        /* 錯誤震動 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); border-color: #eee; }
+            25% { transform: translateX(-8px) rotate(-5deg); border-color: var(--danger); }
+            75% { transform: translateX(8px) rotate(5deg); }
+        }
+        .es-card.shake { animation: shake 0.4s ease-in-out; }
+
+        /* 縮小後的卡片 */
+        .es-minified {
+            width: auto; min-width: 100px; height: 40px;
+            flex-direction: row; padding: 0 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            animation: dropIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: default; pointer-events: none;
+        }
+        .es-minified:hover { transform: none; }
+        .es-minified .es-card-icon { font-size: 20px; margin-right: 8px; margin-bottom: 0; }
+
+        @keyframes dropIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* 嵌入式結果通知 */
+        .es-success-message {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            width: 100%;
+            height: 100%;
+            animation: fadeIn 0.5s;
+        }
+        .es-success-title { font-size: 1.5rem; margin-bottom: 5px; color: #f1c40f; }
+        .es-success-sub { font-size: 1rem; opacity: 0.9; margin-bottom: 15px; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #es-restart-btn {
+            background: #f1c40f; color: #2c3e50; border: none;
+            padding: 10px 25px; font-size: 16px; font-weight: bold;
+            border-radius: 30px; cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 4px 0 #d35400;
+        }
+        #es-restart-btn:hover { background: #f39c12; transform: translateY(-2px); box-shadow: 0 6px 0 #ba4a00; }
+        #es-restart-btn:active { transform: translateY(2px); box-shadow: 0 0 0 #ba4a00; }
+
+        /* RWD 手機版調整 */
+        @media (max-width: 768px) {
+            body { align-items: flex-start; padding: 10px; }
+            #energy-sorter-game { padding: 15px; margin: 0; border-radius: 15px; }
+            .es-header { margin-bottom: 10px; }
+            .es-title { font-size: 1.2rem; }
+            
+            .es-bins-container { flex-direction: row; gap: 10px; }
+            .es-bin { min-height: 200px; flex: 1; }
+            .es-bin-header { padding: 8px; }
+            .es-bin-title { font-size: 0.9rem; }
+            .es-bin-sub { display: none; } /* 手機版隱藏副標題節省空間 */
+            
+            .es-info-box { min-height: 60px; padding: 10px; font-size: 0.9rem; }
+            
+            /* 手機版卡池 */
+            .es-pool { 
+                padding: 10px; gap: 8px;
+                min-height: 120px;
+            }
+            .es-card { width: 70px; height: 75px; }
+            .es-card-icon { font-size: 24px; }
+            .es-card-name { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="energy-sorter-game">
+    
+    <div class="es-header">
+        <h3 class="es-title">⚡ 能源分類圖鑑</h3>
+        <div class="es-score-board">
+            進度：<span id="es-score">0</span> / <span id="es-total">8</span>
+        </div>
+    </div>
+
+    <!-- 資訊/教學區塊：拖曳時會變成說明 -->
+    <div id="es-info-box" class="es-info-box">
+        <div class="es-instruction-text">
+            ⬇️ 從下方拖曳卡片到上方正確的盒子，拖曳時可以看到介紹喔！
+        </div>
+        <div class="es-description-text" id="es-description-text">
+            <!-- 動態插入介紹 -->
+        </div>
+    </div>
+
+    <!-- 遊戲區域 -->
+    <div class="es-game-area">
+        
+        <!-- 分類盒 (移到上方) -->
+        <div class="es-bins-container">
+            
+            <div class="es-bin es-bin-renewable" data-type="renewable">
+                <div class="es-bin-header">
+                    <div class="es-bin-icon">♻️</div>
+                    <div class="es-bin-title">再生能源<div class="es-bin-sub">(永續利用)</div></div>
+                </div>
+                <div class="es-collection-zone" id="zone-renewable"></div>
+            </div>
+
+            <div class="es-bin es-bin-nonrenewable" data-type="nonrenewable">
+                <div class="es-bin-header">
+                    <div class="es-bin-icon">🛢️</div>
+                    <div class="es-bin-title">非再生能源<div class="es-bin-sub">(耗竭/汙染)</div></div>
+                </div>
+                <div class="es-collection-zone" id="zone-nonrenewable"></div>
+            </div>
+
+        </div>
+
+        <!-- 卡牌池 (移到下方，且作為結果顯示區) -->
+        <div id="es-card-pool" class="es-pool">
+            <!-- JS 會動態生成卡片 -->
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    (function() {
+        // 能源資料庫：新增 description 欄位
+        const energyData = [
+            { id: 1, name: "太陽能", icon: "☀️", type: "renewable", desc: "利用太陽的光和熱來發電，取之不盡，不會產生汙染。" },
+            { id: 2, name: "煤炭", icon: "⚫", type: "nonrenewable", desc: "古代植物埋在地下經地質作用形成，燃燒會產生大量二氧化碳。" },
+            { id: 3, name: "風力", icon: "🌬️", type: "renewable", desc: "利用風力帶動扇葉轉動發電，需要蓋在風大的地方。" },
+            { id: 4, name: "石油", icon: "🛢️", type: "nonrenewable", desc: "古代生物遺骸形成，是目前最主要的能源，也會造成空氣汙染。" },
+            { id: 5, name: "水力", icon: "💧", type: "renewable", desc: "利用高處流下的水推動渦輪發電，通常需要興建水庫。" },
+            { id: 6, name: "天然氣", icon: "🔥", type: "nonrenewable", desc: "主要成分是甲烷，雖然比煤炭乾淨，但仍會排放溫室氣體。" },
+            { id: 7, name: "地熱", icon: "🌋", type: "renewable", desc: "利用地球內部的熱能來發電，通常在火山活動頻繁的地區。" },
+            { id: 8, name: "核能", icon: "☢️", type: "nonrenewable", desc: "利用鈾礦進行核分裂產生巨大能量，會產生需要小心處理的核廢料。" }
+        ];
+
+        const cardPool = document.getElementById('es-card-pool');
+        const scoreEl = document.getElementById('es-score');
+        const totalEl = document.getElementById('es-total');
+        const infoBox = document.getElementById('es-info-box');
+        const instructionText = document.querySelector('.es-instruction-text');
+        const descriptionText = document.getElementById('es-description-text');
+        
+        let currentScore = 0;
+        let totalItems = energyData.length;
+
+        // 初始化遊戲
+        function initGame() {
+            // 重置介面
+            cardPool.innerHTML = '';
+            cardPool.classList.remove('success-mode'); // 移除成功樣式
+            document.getElementById('zone-renewable').innerHTML = '';
+            document.getElementById('zone-nonrenewable').innerHTML = '';
+            
+            // 重置資訊欄
+            resetInfoBox();
+
+            currentScore = 0;
+            scoreEl.innerText = 0;
+            totalEl.innerText = totalItems;
+            
+            // 洗牌並生成卡片
+            const shuffled = [...energyData].sort(() => Math.random() - 0.5);
+
+            shuffled.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'es-card';
+                card.draggable = true;
+                // 綁定資料
+                card.dataset.type = item.type;
+                card.dataset.name = item.name;
+                card.dataset.icon = item.icon;
+                card.dataset.desc = item.desc; // 綁定描述
+                
+                card.innerHTML = `<div class="es-card-icon">${item.icon}</div><div class="es-card-name">${item.name}</div>`;
+                
+                addDragEvents(card);
+                cardPool.appendChild(card);
+            });
+        }
+
+        // 顯示描述功能
+        function showDescription(desc) {
+            infoBox.classList.add('active');
+            instructionText.style.display = 'none';
+            descriptionText.innerText = desc;
+            descriptionText.style.display = 'block';
+        }
+
+        function resetInfoBox() {
+            infoBox.classList.remove('active');
+            instructionText.style.display = 'block';
+            descriptionText.style.display = 'none';
+        }
+
+        function addDragEvents(el) {
+            // 電腦版 Drag Events
+            el.addEventListener('dragstart', e => {
+                e.dataTransfer.setData('type', el.dataset.type);
+                el.classList.add('dragging');
+                // 開始拖曳時顯示介紹
+                showDescription(el.dataset.desc);
+            });
+            
+            el.addEventListener('dragend', () => {
+                el.classList.remove('dragging');
+                // 拖曳結束恢復預設文字
+                resetInfoBox();
+            });
+
+            // 手機版 Touch Events
+            el.addEventListener('touchstart', handleTouchStart, {passive: false});
+            el.addEventListener('touchmove', handleTouchMove, {passive: false});
+            el.addEventListener('touchend', handleTouchEnd);
+        }
+
+        // --- 手機版觸控邏輯 ---
+        let touchDragItem = null;
+        let touchStartX = 0, touchStartY = 0;
+
+        function handleTouchStart(e) {
+            if(e.target.closest('#es-restart-btn')) return;
+            e.preventDefault(); 
+            
+            touchDragItem = this;
+            const touch = e.touches[0];
+            const rect = touchDragItem.getBoundingClientRect();
+            
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            
+            // 顯示介紹
+            showDescription(touchDragItem.dataset.desc);
+
+            touchDragItem.style.width = rect.width + 'px';
+            touchDragItem.style.height = rect.height + 'px';
+            touchDragItem.style.position = 'fixed';
+            touchDragItem.style.left = rect.left + 'px';
+            touchDragItem.style.top = rect.top + 'px';
+            touchDragItem.style.zIndex = 1000;
+            touchDragItem.classList.add('dragging');
+        }
+
+        function handleTouchMove(e) {
+            if (!touchDragItem) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const dx = touch.clientX - touchStartX;
+            const dy = touch.clientY - touchStartY;
+            
+            touchDragItem.style.transform = `translate(${dx}px, ${dy}px) scale(1.1)`;
+            checkHover(touch.clientX, touch.clientY);
+        }
+
+        function handleTouchEnd(e) {
+            if (!touchDragItem) return;
+            
+            const touch = e.changedTouches[0];
+            const target = getTargetBin(touch.clientX, touch.clientY);
+            
+            if (target && target.dataset.type === touchDragItem.dataset.type) {
+                transformCard(touchDragItem, target);
+            } else {
+                if(target) shakeCard(touchDragItem); 
+                resetCard(touchDragItem);
+            }
+            
+            resetInfoBox(); // 手機放開時也重置介紹
+            touchDragItem = null;
+            document.querySelectorAll('.es-bin').forEach(b => b.classList.remove('hover'));
+        }
+
+        // --- 核心功能 ---
+
+        function getTargetBin(x, y) {
+            const bins = document.querySelectorAll('.es-bin');
+            for (let bin of bins) {
+                const rect = bin.getBoundingClientRect();
+                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                    return bin;
+                }
+            }
+            return null;
+        }
+        
+        function checkHover(x, y) {
+            document.querySelectorAll('.es-bin').forEach(b => b.classList.remove('hover'));
+            const bin = getTargetBin(x, y);
+            if (bin) bin.classList.add('hover');
+        }
+
+        function resetCard(card) {
+            card.style.transition = 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            card.style.transform = 'translate(0,0)';
+            setTimeout(() => {
+                card.style.position = '';
+                card.style.left = '';
+                card.style.top = '';
+                card.style.zIndex = '';
+                card.style.width = '';
+                card.style.height = '';
+                card.style.transition = '';
+                card.classList.remove('dragging');
+            }, 300);
+        }
+        
+        function shakeCard(card) {
+            card.classList.add('shake');
+            setTimeout(() => card.classList.remove('shake'), 500);
+            
+            // 同步處理原始元素 (針對 Desktop DragGhost)
+            const originalCard = document.querySelector('.es-card.dragging');
+            if(originalCard && originalCard !== card) {
+                 originalCard.classList.add('shake');
+                 setTimeout(() => originalCard.classList.remove('shake'), 500);
+            }
+        }
+
+        function transformCard(card, bin) {
+            const zone = bin.querySelector('.es-collection-zone');
+            
+            const miniCard = document.createElement('div');
+            miniCard.className = 'es-card es-minified';
+            miniCard.innerHTML = `<div class="es-card-icon">${card.dataset.icon}</div><div class="es-card-name">${card.dataset.name}</div>`;
+            
+            card.remove();
+            zone.appendChild(miniCard);
+            
+            currentScore++;
+            scoreEl.innerText = currentScore;
+            
+            bin.style.transform = 'scale(1.05)';
+            setTimeout(() => bin.style.transform = 'scale(1)', 200);
+
+            if (currentScore === totalItems) {
+                gameComplete();
+            }
+        }
+
+        // 電腦版 Drop Logic
+        const bins = document.querySelectorAll('.es-bin');
+        bins.forEach(bin => {
+            bin.addEventListener('dragover', e => {
+                e.preventDefault(); 
+                bin.classList.add('hover');
+            });
+            
+            bin.addEventListener('dragleave', () => bin.classList.remove('hover'));
+            
+            bin.addEventListener('drop', e => {
+                e.preventDefault();
+                bin.classList.remove('hover');
+                
+                const draggedCard = document.querySelector('.es-card.dragging');
+                if (!draggedCard) return;
+
+                if (draggedCard.dataset.type === bin.dataset.type) {
+                    transformCard(draggedCard, bin);
+                } else {
+                    shakeCard(draggedCard);
+                }
+            });
+        });
+
+        function gameComplete() {
+            // 等待最後一張卡片動畫結束後
+            setTimeout(() => {
+                // 將卡片池轉變為結果顯示區
+                cardPool.classList.add('success-mode');
+                cardPool.innerHTML = `
+                    <div class="es-success-message" style="display:flex">
+                        <div class="es-success-title">🎉 圖鑑收集完成！</div>
+                        <div class="es-success-sub">你已經成功分類了所有能源。</div>
+                        <button id="es-restart-btn">🔄 再玩一次</button>
+                    </div>
+                `;
+                
+                // 重新綁定按鈕事件 (因為按鈕是動態生成的)
+                document.getElementById('es-restart-btn').addEventListener('click', initGame);
+                
+                confettiEffect();
+            }, 300);
+        }
+        
+        function confettiEffect() {
+            const colors = ['🎉', '✨', '⚡', '♻️', '🌟'];
+            for(let i=0; i<30; i++) {
+                const el = document.createElement('div');
+                el.innerText = colors[Math.floor(Math.random() * colors.length)];
+                el.style.position = 'fixed';
+                el.style.left = Math.random() * 100 + 'vw';
+                el.style.top = '-50px';
+                el.style.fontSize = (Math.random() * 20 + 20) + 'px';
+                el.style.zIndex = 9999;
+                el.style.transition = `top ${Math.random() * 2 + 1}s ease-in, opacity 1s 1s`;
+                document.body.appendChild(el);
+                
+                setTimeout(() => {
+                    el.style.top = '110vh';
+                    el.style.opacity = '0';
+                }, 100);
+                
+                setTimeout(() => el.remove(), 4000);
+            }
+        }
+        
+        // 啟動
+        initGame();
+    })();
+</script>
+
+</body>
+</html>
