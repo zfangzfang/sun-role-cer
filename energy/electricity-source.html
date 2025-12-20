@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>能源轉換實驗室：從自然到插座</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #f1c40f;
+            --success-color: #27ae60;
+            --bg-color: #f0f4f8;
+            --panel-bg: #ffffff;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            overscroll-behavior: none; 
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            text-align: center;
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        h1 { margin: 0; font-size: 1.5rem; color: var(--primary-color); }
+        p.subtitle { margin: 5px 0 0; color: #666; font-size: 0.9rem; }
+
+        .game-stage {
+            position: relative;
+            background: #e0e6ed;
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            min-height: 450px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+            border: 2px solid #bdc3c7;
+            transition: background 0.8s ease;
+            overflow: hidden;
+        }
+
+        /* 左側：原料區 */
+        .section-panel {
+            flex: 1;
+            background: rgba(255,255,255,0.9);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 10;
+            backdrop-filter: blur(5px);
+            min-width: 160px;
+            border-right: 1px solid #eee;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-align: center;
+            color: #7f8c8d;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
+            margin-bottom: 5px;
+        }
+
+        .draggable-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: grab;
+            border: 2px solid transparent;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .draggable-item:hover:not(.completed) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #3498db;
+        }
+
+        .draggable-item.completed {
+            background: #f0f0f0;
+            cursor: default;
+            opacity: 0.6;
+            border-color: var(--success-color);
+            pointer-events: none; /* 禁止再次拖曳 */
+        }
+        
+        .draggable-item.completed::after {
+            content: "✅";
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+        }
+
+        .item-icon { font-size: 1.5rem; }
+        .item-info h4 { margin: 0; font-size: 1rem; }
+        .item-info span { font-size: 0.75rem; color: #888; }
+
+        /* 中間：轉換區 */
+        .converter-zone {
+            flex: 1.5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        .knowledge-display {
+            position: absolute;
+            top: 10px;
+            background: rgba(44, 62, 80, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 20;
+            width: 80%;
+        }
+        .knowledge-display.active { opacity: 1; transform: translateY(0); }
+
+        .power-plant {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px dashed #bdc3c7;
+            background: rgba(255,255,255,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            z-index: 5;
+        }
+        .power-plant.hover { border-color: #f1c40f; transform: scale(1.1); background: rgba(255, 255, 255, 0.9); }
+        .power-plant.working { border-style: solid; border-color: #2ecc71; animation: plant-pulse 0.8s infinite; }
+
+        .plant-icon { font-size: 2.5rem; }
+        .plant-text { font-size: 0.8rem; font-weight: bold; color: #555; margin-top: 5px; }
+
+        .wire-path {
+            position: absolute;
+            height: 6px;
+            background: #bdc3c7;
+            width: 50%;
+            top: 50%;
+            right: 0;
+            z-index: 1;
+            transform: translateY(-50%);
+            border-radius: 3px;
+        }
+
+        .electron {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #f1c40f;
+            border-radius: 50%;
+            top: 50%;
+            right: 50%;
+            transform: translate(50%, -50%);
+            box-shadow: 0 0 10px #f1c40f;
+            opacity: 0;
+            z-index: 2;
+        }
+        /* 電子移動動畫 */
+        .electron.moving { 
+            animation: flowRight 1s linear forwards; /* 播放一次後停在終點 */
+            opacity: 1; 
+        }
+
+        /* 右側：次級能源與資訊區 */
+        .home-zone {
+            flex: 1.5;
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+            min-width: 200px;
+            border-left: 1px solid #eee;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .bulb-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .light-bulb {
+            font-size: 5rem;
+            color: #bdc3c7;
+            transition: all 0.5s;
+            filter: grayscale(100%);
+            margin-bottom: 10px;
+        }
+        .light-bulb.on {
+            color: #f1c40f;
+            filter: grayscale(0%);
+            text-shadow: 0 0 40px rgba(241, 196, 15, 0.8);
+            transform: scale(1.1);
+        }
+
+        .info-content {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+        .info-content.show { display: flex; }
+
+        .info-title { font-size: 1.4rem; color: #2c3e50; margin: 10px 0; font-weight: bold; }
+        .info-tags { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; justify-content: center; }
+        .tag { background: #eee; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; color: #555; }
+        .info-desc { font-size: 0.9rem; color: #666; line-height: 1.5; margin-bottom: 20px; text-align: left; background: #f9f9f9; padding: 10px; border-radius: 8px; }
+
+        .next-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+            transition: all 0.2s;
+        }
+        .next-btn:hover { background: #2980b9; transform: scale(1.05); }
+        .next-btn.finish { background: #27ae60; animation: bounce 2s infinite; } /* 完成時變綠色 */
+
+        /* 總結畫面 */
+        .summary-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.98);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto; /* 確保小螢幕可捲動 */
+        }
+        .summary-overlay.show { display: flex; }
+        
+        .summary-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+            width: 100%;
+            max-width: 500px;
+            text-align: left;
+        }
+        
+        .summary-item {
+            background: #fff;
+            padding: 12px 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            border: 1px solid #e0e0e0;
+            color: #555;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .s-title {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .s-tag {
+            font-size: 0.75rem;
+            background: #eee;
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: #777;
+            font-weight: normal;
+        }
+
+        .s-desc {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            line-height: 1.4;
+        }
+
+        @keyframes plant-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); transform: scale(1); }
+            50% { transform: scale(1.02); }
+            70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); transform: scale(1); }
+        }
+        @keyframes flowRight {
+            0% { right: 50%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { right: 0; opacity: 0; } /* 跑到底消失 */
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-5px);} 60% {transform: translateY(-3px);} }
+
+        @media (max-width: 768px) {
+            .game-stage { flex-direction: column; height: auto; gap: 0; }
+            .section-panel { border-right: none; border-bottom: 1px solid #eee; width: 100%; box-sizing: border-box; flex-direction: row; flex-wrap: wrap; }
+            .draggable-item { flex: 1; min-width: 140px; }
+            .converter-zone { padding: 40px 0; }
+            .wire-path { width: 4px; height: 50%; top: auto; bottom: 0; right: 50%; transform: translateX(50%); }
+            .electron { top: 0; right: 50%; transform: translate(50%, -50%); }
+            
+            /* 手機版電子流動方向修改 */
+            .electron.moving { animation: flowDown 1s linear forwards; }
+            @keyframes flowDown {
+                0% { top: 0; opacity: 0; }
+                10% { opacity: 1; }
+                90% { opacity: 1; }
+                100% { top: 100%; opacity: 0; }
+            }
+
+            .home-zone { border-left: none; border-top: 1px solid #eee; width: 100%; box-sizing: border-box; min-height: 250px; }
+            .light-bulb { font-size: 4rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🔌 能源轉換實驗室</h1>
+        <p class="subtitle">將左側原料拖入發電廠，完成所有能源的學習挑戰！</p>
+    </header>
+
+    <div class="game-stage" id="stage-bg">
+        
+        <!-- 左側面板 -->
+        <div class="section-panel">
+            <div class="section-title">初級能源 (原料)</div>
+            <div class="draggable-item" draggable="true" data-type="coal" id="item-coal">
+                <div class="item-icon">🪨</div>
+                <div class="item-info"><h4>煤炭</h4><span>地底化石</span></div>
+            </div>
+            <div class="draggable-item" draggable="true" data-type="wind" id="item-wind">
+                <div class="item-icon">🌬️</div>
+                <div class="item-info"><h4>風力</h4><span>空氣流動</span></div>
+            </div>
+            <div class="draggable-item" draggable="true" data-type="hydro" id="item-hydro">
+                <div class="item-icon">💧</div>
+                <div class="item-info"><h4>水力</h4><span>高處落下</span></div>
+            </div>
+            <div class="draggable-item" draggable="true" data-type="solar" id="item-solar">
+                <div class="item-icon">☀️</div>
+                <div class="item-info"><h4>太陽</h4><span>光熱輻射</span></div>
+            </div>
+        </div>
+
+        <!-- 中間面板 -->
+        <div class="converter-zone">
+            <div class="knowledge-display" id="knowledge-tip">💡 請拖曳一個未完成的原料</div>
+            <div class="power-plant" id="drop-zone">
+                <div class="plant-icon">🏭</div>
+                <div class="plant-text" id="plant-label">發電廠</div>
+            </div>
+            <div class="wire-path"></div>
+            <div class="electron" id="electron"></div>
+        </div>
+
+        <!-- 右側面板 -->
+        <div class="home-zone" id="home-zone">
+            <div class="section-title">次級能源 (電力)</div>
+            
+            <div class="bulb-container" id="bulb-view">
+                <div class="light-bulb" id="bulb">💡</div>
+                <div style="font-size: 0.8rem; color: #999;">家中插座</div>
+            </div>
+
+            <div class="info-content" id="info-view">
+                <div class="light-bulb on" style="font-size: 3rem; margin: 0;">💡</div>
+                <h3 class="info-title" id="info-name">能源名稱</h3>
+                <div class="info-tags">
+                    <span class="tag" id="tag-origin">來源</span>
+                    <span class="tag" id="tag-method">原理</span>
+                </div>
+                <div class="info-desc" id="info-desc">說明文字...</div>
+                
+                <!-- 按鈕文字會動態改變 -->
+                <button class="next-btn" id="action-btn" onclick="handleAction()">👉 繼續下一個</button>
+            </div>
+        </div>
+
+        <!-- 總結畫面 -->
+        <div class="summary-overlay" id="summary-overlay">
+            <h2 style="color: #2c3e50; margin-bottom: 5px;">✅ 學習完成！重點筆記</h2>
+            <p style="color: #666; margin-top:0;">你已了解所有能源最終都能轉換成「電力」：</p>
+            
+            <div class="summary-list">
+                <div class="summary-item">
+                    <div class="s-title">🪨 煤炭 (火力) <span class="s-tag">化學能</span></div>
+                    <div class="s-desc">燃燒產生蒸氣推動渦輪。發電最穩定且便宜，但會產生空污與大量碳排。</div>
+                </div>
+                <div class="summary-item">
+                    <div class="s-title">🌬️ 風力發電 <span class="s-tag">動能</span></div>
+                    <div class="s-desc">利用空氣流動帶動葉片。完全零碳排，但風力不穩定，看天吃飯。</div>
+                </div>
+                <div class="summary-item">
+                    <div class="s-title">💧 水力發電 <span class="s-tag">位能</span></div>
+                    <div class="s-desc">利用高處落下的水流衝擊。可搭配水庫蓄水調節，是成熟的再生能源。</div>
+                </div>
+                <div class="summary-item">
+                    <div class="s-title">☀️ 太陽能 <span class="s-tag">光能</span></div>
+                    <div class="s-desc">利用半導體直接將光轉為電。最乾淨但晚上無法發電，需儲能設備輔助。</div>
+                </div>
+            </div>
+
+            <button class="next-btn" onclick="resetAll()">🔄 重新開始</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const energyData = {
+        'coal': {
+            name: "火力發電 (煤炭)",
+            tip: "🪨 煤炭蘊含化學能，燃燒後產生高壓蒸氣推動渦輪。",
+            desc: "這是目前全球最主要的基載電力來源。雖然穩定且便宜，但燃燒過程會排放大量二氧化碳與空氣污染物，造成溫室效應。",
+            origin: "來源: 古代植物化石",
+            method: "原理: 化學能轉熱能",
+            bg: "linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%)",
+            color: "#2c3e50"
+        },
+        'wind': {
+            name: "風力發電",
+            tip: "🌬️ 利用大自然的空氣流動，直接帶動葉片旋轉。",
+            desc: "完全零碳排的再生能源。通常設置在風強的沿海或離岸地區。挑戰在於風力不穩定，沒風時就無法發電。",
+            origin: "來源: 大氣流動",
+            method: "原理: 動能轉電能",
+            bg: "linear-gradient(135deg, #83a4d4 0%, #b6fbff 100%)",
+            color: "#2980b9"
+        },
+        'hydro': {
+            name: "水力發電",
+            tip: "💧 水從高處落下產生的衝擊力，就像瀑布一樣。",
+            desc: "利用位能轉換的傳統再生能源。除了發電，水庫還能蓄水。但興建水庫可能會破壞生態，且受降雨量影響。",
+            origin: "來源: 河川/水庫",
+            method: "原理: 重力位能",
+            bg: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+            color: "#27ae60"
+        },
+        'solar': {
+            name: "太陽能發電",
+            tip: "☀️ 利用半導體材料，直接吸收光子產生電子流動。",
+            desc: "最乾淨的能源之一，只要有陽光就能發電。適合裝設在屋頂或廣闊平原。缺點是晚上無法發電，需要搭配儲能設備。",
+            origin: "來源: 太陽輻射",
+            method: "原理: 光電效應",
+            bg: "linear-gradient(135deg, #f2994a 0%, #f2c94c 100%)",
+            color: "#d35400"
+        }
+    };
+
+    const draggables = document.querySelectorAll('.draggable-item');
+    const dropZone = document.getElementById('drop-zone');
+    const stageBg = document.getElementById('stage-bg');
+    const knowledgeTip = document.getElementById('knowledge-tip');
+    const electron = document.getElementById('electron');
+    const plantLabel = document.getElementById('plant-label');
+    
+    const bulbView = document.getElementById('bulb-view');
+    const infoView = document.getElementById('info-view');
+    const infoName = document.getElementById('info-name');
+    const infoDesc = document.getElementById('info-desc');
+    const tagOrigin = document.getElementById('tag-origin');
+    const tagMethod = document.getElementById('tag-method');
+    const actionBtn = document.getElementById('action-btn');
+
+    let isProcessing = false;
+    let completedCount = 0;
+    const totalItems = 4;
+
+    // --- Drag Events ---
+    draggables.forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+            if(isProcessing || item.classList.contains('completed')) {
+                e.preventDefault();
+                return;
+            }
+            e.dataTransfer.setData('type', item.dataset.type);
+            showTip(energyData[item.dataset.type].tip);
+            dropZone.classList.add('hover');
+        });
+
+        item.addEventListener('dragend', () => {
+            dropZone.classList.remove('hover');
+            if (!isProcessing) showTip("💡 請拖曳一個未完成的原料");
+        });
+    });
+
+    dropZone.addEventListener('dragover', (e) => e.preventDefault());
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const type = e.dataTransfer.getData('type');
+        if (type) activatePlant(type);
+    });
+
+    // --- Touch Events (Mobile) ---
+    let activeTouchItem = null;
+    let touchStartX = 0, touchStartY = 0;
+    let initialX = 0, initialY = 0;
+
+    draggables.forEach(item => {
+        item.addEventListener('touchstart', (e) => {
+            if(isProcessing || item.classList.contains('completed')) return;
+            const touch = e.touches[0];
+            activeTouchItem = item;
+            
+            const rect = item.getBoundingClientRect();
+            initialX = rect.left;
+            initialY = rect.top;
+            touchStartX = touch.clientX - initialX;
+            touchStartY = touch.clientY - initialY;
+
+            item.style.position = 'fixed';
+            item.style.width = rect.width + 'px';
+            item.style.zIndex = 1000;
+            item.style.left = initialX + 'px';
+            item.style.top = initialY + 'px';
+            item.style.opacity = '0.8';
+            
+            showTip(energyData[item.dataset.type].tip);
+            dropZone.classList.add('hover');
+        }, {passive: false});
+
+        item.addEventListener('touchmove', (e) => {
+            if (!activeTouchItem) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            activeTouchItem.style.left = (touch.clientX - touchStartX) + 'px';
+            activeTouchItem.style.top = (touch.clientY - touchStartY) + 'px';
+        }, {passive: false});
+
+        item.addEventListener('touchend', (e) => {
+            if (!activeTouchItem) return;
+            dropZone.classList.remove('hover');
+            
+            const touch = e.changedTouches[0];
+            const dropRect = dropZone.getBoundingClientRect();
+            
+            if (touch.clientX > dropRect.left && touch.clientX < dropRect.right &&
+                touch.clientY > dropRect.top && touch.clientY < dropRect.bottom) {
+                activatePlant(activeTouchItem.dataset.type);
+            } else {
+                showTip("💡 請拖曳一個未完成的原料");
+            }
+
+            activeTouchItem.style.position = '';
+            activeTouchItem.style.width = '';
+            activeTouchItem.style.zIndex = '';
+            activeTouchItem.style.left = '';
+            activeTouchItem.style.top = '';
+            activeTouchItem.style.opacity = '';
+            activeTouchItem = null;
+        });
+    });
+
+    function showTip(text) {
+        knowledgeTip.textContent = text;
+        knowledgeTip.classList.add('active');
+    }
+
+    function activatePlant(type) {
+        if (isProcessing) return;
+        isProcessing = true;
+        const data = energyData[type];
+
+        // 1. 鎖定 UI
+        const item = document.getElementById(`item-${type}`);
+        item.classList.add('completed');
+        item.draggable = false;
+        completedCount++;
+
+        // 2. 啟動動畫 (發電中)
+        stageBg.style.background = data.bg;
+        dropZone.classList.add('working'); // 開始晃動
+        plantLabel.textContent = "發電中...";
+        showTip(`正在使用 ${data.name} 發電...`);
+
+        // 重啟電子動畫
+        electron.classList.remove('moving');
+        void electron.offsetWidth;
+        electron.classList.add('moving');
+
+        // 3. 轉換完成 (1.5秒後)
+        setTimeout(() => {
+            // 節能優化：停止晃動，僅保留靜態亮燈狀態
+            dropZone.classList.remove('working'); 
+            plantLabel.textContent = "供電中";
+            
+            showResult(data);
+        }, 1500); // 延長一點點時間讓動畫跑完
+    }
+
+    function showResult(data) {
+        // 切換右側面板
+        bulbView.style.display = 'none';
+        infoView.classList.add('show');
+
+        // 填寫資訊
+        infoName.textContent = data.name;
+        infoDesc.textContent = data.desc;
+        tagOrigin.textContent = data.origin;
+        tagMethod.textContent = data.method;
+        
+        infoName.style.color = data.color;
+        document.querySelectorAll('.tag').forEach(t => t.style.color = data.color);
+
+        // --- 關鍵修改：判斷是否為最後一個 ---
+        if (completedCount >= totalItems) {
+            actionBtn.textContent = "✅ 完成學習 (查看總結)";
+            actionBtn.classList.add('finish');
+            showTip("🎉 你已完成所有能源的學習！");
+        } else {
+            actionBtn.textContent = "👉 繼續下一個";
+            actionBtn.classList.remove('finish');
+        }
+    }
+
+    // 按鈕邏輯
+    window.handleAction = function() {
+        if (completedCount >= totalItems) {
+            // 全部完成 -> 顯示總結
+            document.getElementById('summary-overlay').classList.add('show');
+        } else {
+            // 還沒完成 -> 重置舞台，繼續下一個
+            resetStage();
+        }
+    };
+
+    function resetStage() {
+        isProcessing = false;
+        
+        // 恢復 UI 預設值
+        stageBg.style.background = "#e0e6ed";
+        plantLabel.textContent = "發電廠";
+        dropZone.classList.remove('working'); // 確保停止晃動
+        electron.classList.remove('moving'); // 清除電子
+        
+        infoView.classList.remove('show');
+        bulbView.style.display = 'flex';
+        
+        showTip("💡 請拖曳下一個未完成的原料");
+    }
+
+    window.resetAll = function() {
+        location.reload();
+    };
+
+</script>
+
+</body>
+</html>
