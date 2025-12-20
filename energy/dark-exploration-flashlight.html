@@ -92,7 +92,9 @@
             let lightY = -5000;
             
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const radius = isMobile ? 180 : 150; 
+            
+            // 調整光圈半徑：取中間值 (手機 140 / 電腦 120)
+            const radius = isMobile ? 140 : 120; 
 
             // --- 核心邏輯 ---
             function updateLight(x, y) {
