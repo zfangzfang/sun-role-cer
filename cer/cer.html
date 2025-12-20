@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>4.2 CER 練習｜太陽能板進入山林</title>
+<style>
+  :root{
+    --bg:#f6f7fb;--card:#ffffff;--text:#0f172a;--muted:#6b7280;--border:#e5e7eb;
+    --primary:#2563eb;--primary-soft:#eef2ff;--accent:#f59e0b;--accent-soft:#fff7ed;
+    --success:#16a34a;--ring:rgba(37,99,235,.15)
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Noto Sans TC",system-ui,Roboto;background:var(--bg);color:var(--text)}
+  .wrap{max-width:900px;margin:auto;padding:28px 16px 96px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;margin-top:18px;box-shadow:0 8px 22px rgba(2,8,23,.06)}
+  h1{margin:0 0 6px 0;color:var(--primary)}
+  h2{margin-top:0}
+  h3{margin:0 0 6px 0}
+  .muted{color:var(--muted)}
+  .step{display:none}
+  .step.active{display:block}
+  .nav{display:flex;justify-content:space-between;gap:12px;margin-top:16px}
+  button{padding:10px 16px;border:none;border-radius:12px;font-weight:700;cursor:pointer}
+  button.primary{background:var(--primary);color:#fff}
+  button.ghost{background:#e5e7eb}
+  button.success{background:var(--success);color:#fff}
+  select,textarea{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:14px;font-size:15px}
+  textarea{min-height:120px}
+  .notice{background:var(--accent-soft);border-left:6px solid var(--accent)}
+  .info{background:var(--primary-soft);border-left:6px solid var(--primary)}
+  .progress{display:flex;gap:8px;margin-top:12px}
+  .dot{width:10px;height:10px;border-radius:999px;background:#c7d2fe}
+  .dot.active{background:var(--primary)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>4.2 CER 練習：太陽能板進入山林</h1>
+  <p class="muted">請依序完成四個步驟：<br>
+  ① 表態 → ② 說明理由 → ③ 找證據 → ④ 完成並優化 CER</p>
+
+  <!-- Step 1 前置說明：只在 Step 1 顯示 -->
+  <div class="card notice step active" id="introNotice">
+    <p><strong>學習提醒</strong></p>
+    <p>這一份練習<strong>不是要你一次寫好</strong>，而是要幫助你分清楚：</p>
+    <p>✔ 哪一句是<strong>理由</strong>（你的想法）<br>✔ 哪一句需要<strong>證據</strong>（可以拿出來支持的資料）</p>
+  </div>
+
+  <div class="card info step active" id="introCER">
+    <p><strong>什麼是 CER？</strong></p>
+    <p><strong>C（主張）</strong>：你站在哪一個立場。</p>
+    <p><strong>E（證據）</strong>：能支持你主張的資料、觀察或事實。</p>
+    <p><strong>R（推理）</strong>：說明為什麼這些證據能支持你的主張。</p>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="card step active" id="stepA">
+    <h2>Step 1｜先表態（C）</h2>
+    <p><strong>問題：</strong>你怎麼看「太陽能板進入山林」？</p>
+    <select id="stance">
+      <option value="">請選擇你的立場…</option>
+      <option value="我支持">我支持</option>
+      <option value="我有條件支持">我有條件支持</option>
+      <option value="我有條件反對">我有條件反對</option>
+      <option value="我反對">我反對</option>
+    </select>
+    <div class="nav">
+      <span></span>
+      <button class="primary" onclick="nextStep('A','B')">下一步</button>
+    </div>
+    <div class="progress"><span class="dot active"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="card step" id="stepB">
+    <h2>Step 2｜說出你的理由（R 初版）</h2>
+    <p><strong>你的主張：</strong><span id="showC"></span></p>
+    <p class="muted">請用自己的話說明你為什麼這樣想。這裡寫的是<strong>理由</strong>，不一定是證據。</p>
+    <textarea id="reasoningDraft" placeholder="請用你自己的話說明原因…"></textarea>
+    <div class="nav">
+      <button class="ghost" onclick="prevStep('B','A')">上一步</button>
+      <button class="primary" onclick="nextStep('B','C')">下一步</button>
+    </div>
+    <div class="progress"><span class="dot"></span><span class="dot active"></span><span class="dot"></span><span class="dot"></span></div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="card step" id="stepC">
+    <h2>Step 3｜找證據，撐住你的理由（E）</h2>
+    <p><strong>你的理由：</strong><span id="showR"></span></p>
+    <p class="muted">如果有人不相信你的理由，你可以拿出什麼<strong>資料、觀察或事實</strong>來支持？</p>
+    <textarea id="evidence" placeholder="例如：課堂活動結果、模擬數據、實際觀察到的現象、相關報導…"></textarea>
+    <div class="card" style="background:#f8fafc;margin-top:14px">
+      <p class="muted">提示：證據通常來自「你看到了什麼資料或結果」，而不是「你怎麼想」。</p>
+    </div>
+    <div class="nav">
+      <button class="ghost" onclick="prevStep('C','B')">上一步</button>
+      <button class="primary" onclick="nextStep('C','D')">完成 CER</button>
+    </div>
+    <div class="progress"><span class="dot"></span><span class="dot"></span><span class="dot active"></span><span class="dot"></span></div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="card step" id="stepD">
+    <h2>Step 4｜完成我的 CER</h2>
+    <div class="card" style="background:linear-gradient(135deg,#eef2ff,#f0f9ff)">
+      <p><strong>C：</strong><span id="finalC"></span></p>
+      <p><strong>E：</strong><span id="finalE"></span></p>
+      <p><strong>R：</strong><span id="finalR"></span></p>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>完成一版後，試著讓你的論證更清楚</h3>
+      <p>你現在看到的是你<strong>目前版本</strong>的 CER。請依照下面的順序操作：</p>
+      <ol>
+        <li><strong>生成預覽：</strong>確認你的 C／E／R 是否都有內容，結構是否完整。</li>
+        <li><strong>複製我的 CER：</strong>保留你這一版的成果，可貼到作業或筆記中。</li>
+        <li><strong>複製後詢問 AI：</strong>系統會幫你加上一段<strong>老師事先設計好的提問引導語</strong>，把文字貼給 AI，請它協助檢查結構、證據力並給評分與建議。</li>
+        <li><strong>回到前面修改：</strong>依 AI 回饋回到 Step 2 或 Step 3 修正，再次詢問 AI。</li>
+      </ol>
+      <p class="muted">這份練習不是一次完成，而是透過多次修正，讓你的論證越來越清楚。</p>
+
+      <div class="card notice" style="margin-top:12px">
+        <p><strong>請注意</strong></p>
+        <ul>
+          <li>AI <strong>不會</strong>幫你寫答案。</li>
+          <li>最重要的修改，<strong>必須由你自己完成</strong>。</li>
+          <li>如果你只是照抄 AI，就跳過了這個練習真正要你學的能力。</li>
+        </ul>
+        <p class="muted">這個「詢問 → 修改 → 再詢問」的過程，就是你在學習如何用證據說話。</p>
+      </div>
+
+      <p class="muted" style="margin-top:10px">繳交作業時，你可以<strong>自行複製文字</strong>貼到指定平台，或使用自己的裝置<strong>直接截圖目前畫面</strong>作為作業成果。</p>
+
+      <div class="nav" style="justify-content:flex-start;margin-top:12px">
+        <button class="success" onclick="copyCER()">複製我的 CER</button>
+        <button class="primary" onclick="copyAskAI()">複製後詢問 AI</button>
+      </div>
+    </div>
+    <div class="nav">
+      <button class="ghost" onclick="prevStep('D','C')">回到修改</button>
+      <span></span>
+    </div>
+    <div class="progress"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot active"></span></div>
+  </div>
+</div>
+
+<script>
+  const stance = document.getElementById('stance');
+  const reasoningDraft = document.getElementById('reasoningDraft');
+  const evidence = document.getElementById('evidence');
+
+  function showStep(id){
+    document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+    document.getElementById('step'+id).classList.add('active');
+    sync();
+  }
+  function nextStep(from,to){ showStep(to); }
+  function prevStep(from,to){ showStep(to); }
+
+  function sync(){
+    const c = stance.value ? `${stance.value}太陽能板進入山林。` : '';
+    const r = reasoningDraft ? reasoningDraft.value : '';
+    document.getElementById('showC').textContent = c;
+    document.getElementById('showR').textContent = r;
+    document.getElementById('finalC').textContent = c;
+    document.getElementById('finalE').textContent = evidence.value || '';
+    document.getElementById('finalR').textContent = (evidence.value && r)
+      ? `因為${evidence.value}，所以${r}`
+      : r;
+  }
+
+  function copyCER(){
+    const text = `C：${stance.value}太陽能板進入山林。\nE：${evidence.value}\nR：${reasoningDraft.value}`;
+    navigator.clipboard.writeText(text);
+    alert('已複製你的 CER');
+  }
+
+  function captureCER(){
+    alert('請使用裝置的截圖功能擷取畫面。');
+  }
+
+  function copyAskAI(){
+    const text = `【CER 練習｜太陽能板進入山林】\n\nC：${stance.value}太陽能板進入山林。\nE：${evidence.value}\nR：${reasoningDraft.value}\n\n請協助我：\n1. 檢查這段 CER 的結構是否完整；\n2. 評估我的證據是否真的能支持主張；\n3. 用國中生能理解的方式給我 1–10 分；\n4. 提供我三項可以改進的建議（不要直接幫我改寫）。`;
+    navigator.clipboard.writeText(text);
+    alert('已複製，請貼給 AI 取得回饋');
+  }
+</script>
+
+  <div class="card" style="margin-top:32px;background:#f8fafc">
+    <p class="muted" style="font-size:13px">
+      本練習器由 <strong>何莉芳</strong> 與 <strong>ChatGPT（GPT‑5.2）</strong> 共同設計，<br>
+      以生成式 AI 協作方式進行多輪討論、修正與優化。<br>
+      設計時間：<strong>2025 年 12 月</strong>。
+    </p>
+  </div>
+</div>
+</body>
+</html>
