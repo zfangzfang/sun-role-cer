@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>希望村落｜能源顧問結業儀式</title>
+    <!-- 引入 Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Great+Vibes&family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #2F4F4F;
+            --accent-color: #D4AF37;
+            --bg-color: #F9F7F2;
+        }
+
+        body {
+            font-family: "Zen Maru Gothic", "Noto Serif TC", "Microsoft JhengHei", serif;
+            background-color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #pledge-generator {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            max-width: 1000px;
+            width: 100%;
+            background: var(--bg-color);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 左側控制面板 */
+        .pg-input-panel {
+            flex: 1;
+            min-width: 320px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .pg-brand {
+            font-size: 14px;
+            color: #888;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            font-family: 'Zen Maru Gothic', sans-serif;
+            font-weight: bold;
+        }
+
+        .pg-title {
+            color: var(--primary-color);
+            margin: 0 0 15px 0;
+            font-size: 28px;
+            font-weight: 700;
+            font-family: "Noto Serif TC", serif;
+        }
+
+        .pg-subtitle {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .pg-form-group {
+            margin-bottom: 20px;
+        }
+
+        .pg-label {
+            display: block;
+            font-weight: bold;
+            color: #4A4A4A;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .pg-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            background: #fff;
+            transition: all 0.3s ease;
+            color: #333;
+            font-family: "Zen Maru Gothic", sans-serif;
+            box-sizing: border-box; /* 確保 padding 不會撐開寬度 */
+        }
+
+        .pg-input:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+        }
+
+        /* 小標題樣式調整 */
+        .pledge-item-label {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 4px;
+            margin-top: 10px;
+        }
+        .pledge-item-label:first-child {
+            margin-top: 0;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .pg-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.1s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: "Noto Serif TC", serif;
+        }
+
+        .pg-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .pg-btn:active {
+            transform: translateY(0);
+        }
+
+        .pg-btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .pg-btn-secondary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        /* 右側預覽面板 */
+        .pg-preview-panel {
+            flex: 1.5;
+            min-width: 320px;
+            background: #E8E4D9;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            background-image: radial-gradient(#d4d4d4 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            background: white;
+            margin-bottom: 10px;
+        }
+
+        .pg-loading {
+            position: absolute;
+            color: #666;
+            font-style: italic;
+            pointer-events: none;
+            font-family: "Zen Maru Gothic", sans-serif;
+        }
+        
+        .mobile-tip {
+            font-size: 13px;
+            color: #666;
+            background: rgba(255,255,255,0.7);
+            padding: 5px 10px;
+            border-radius: 15px;
+            margin-top: 5px;
+            display: none;
+            text-align: center;
+        }
+
+        .pg-style-tag {
+            margin-top: 20px;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 6px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        @media (max-width: 768px) {
+            #pledge-generator {
+                flex-direction: column;
+            }
+            .pg-preview-panel {
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="pledge-generator">
+    <div class="pg-input-panel">
+        <div class="pg-brand">HOPE VILLAGE PROJECT</div>
+        <h3 class="pg-title">從山林到太陽｜結業儀式</h3>
+        <p class="pg-subtitle">歡迎完成課程的能源顧問。請寫下 3 個你能做到的具體行動（每項 18 字以內）。</p>
+        
+        <div class="pg-form-group">
+            <label class="pg-label">你的名字 (Student Name)</label>
+            <input type="text" id="user-name" class="pg-input" placeholder="例如：王小明" maxlength="12">
+        </div>
+
+        <div class="pg-form-group">
+            <label class="pg-label">行動承諾 (Action List)</label>
+            
+            <div class="pledge-item-label">承諾 1：</div>
+            <input type="text" id="pledge-1" class="pg-input" placeholder="例如：離開房間隨手關燈" maxlength="18">
+            
+            <div class="pledge-item-label">承諾 2：</div>
+            <input type="text" id="pledge-2" class="pg-input" placeholder="例如：支持家人使用節能家電" maxlength="18">
+            
+            <div class="pledge-item-label">承諾 3：</div>
+            <input type="text" id="pledge-3" class="pg-input" placeholder="例如：每週減少一次塑膠使用" maxlength="18">
+        </div>
+
+        <div class="btn-group">
+            <button id="generate-btn" class="pg-btn pg-btn-primary">
+                <span>✨ 簽署並生成證書</span>
+            </button>
+        </div>
+        
+        <div id="download-area" style="display:none; margin-top:10px;">
+             <button id="download-btn" class="pg-btn pg-btn-secondary" style="width:100%">
+                <span>📥 下載證書</span>
+            </button>
+        </div>
+        
+        <div id="style-tag" class="pg-style-tag" style="visibility: hidden;">
+            <span>🎨 當前風格：</span>
+            <strong id="style-name">--</strong>
+        </div>
+    </div>
+
+    <div class="pg-preview-panel">
+        <canvas id="certificate-canvas" width="800" height="600"></canvas>
+        <div id="mobile-tip" class="mobile-tip">💡 電腦請點下載，手機若無法下載請長按圖片儲存</div>
+        <div id="loading-text" class="pg-loading">字體載入中，請稍候...</div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const canvas = document.getElementById('certificate-canvas');
+        const ctx = canvas.getContext('2d');
+        const generateBtn = document.getElementById('generate-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const downloadArea = document.getElementById('download-area');
+        const nameInput = document.getElementById('user-name');
+        
+        // 取得三個承諾輸入框
+        const pledgeInput1 = document.getElementById('pledge-1');
+        const pledgeInput2 = document.getElementById('pledge-2');
+        const pledgeInput3 = document.getElementById('pledge-3');
+        
+        const loadingText = document.getElementById('loading-text');
+        const styleTag = document.getElementById('style-tag');
+        const styleName = document.getElementById('style-name');
+        const mobileTip = document.getElementById('mobile-tip');
+
+        // 當前狀態紀錄
+        let currentTheme = null;
+        let currentName = "";
+        let currentPledges = [];
+
+        const themes = [
+            {
+                id: "mucha",
+                name: "🌿 慕夏微風 (Nature)",
+                bg: "#FDFBF0",
+                primary: "#2F4F4F",
+                secondary: "#8FBC8F",
+                accent: "#D4AF37",
+                fontColor: "#444444", 
+                frameStyle: "artNouveau"
+            },
+            {
+                id: "solarpunk",
+                name: "⚡ 太陽龐克 (Future)",
+                bg: "#101827",
+                primary: "#4ADE80",
+                secondary: "#38BDF8",
+                accent: "#FACC15",
+                fontColor: "#F1F5F9",
+                frameStyle: "tech"
+            },
+            {
+                id: "ember",
+                name: "🔥 守護之火 (Passion)",
+                bg: "#2C2420",
+                primary: "#FB923C",
+                secondary: "#FCA5A5",
+                accent: "#EA580C",
+                fontColor: "#FAFAF9",
+                frameStyle: "bold"
+            }
+        ];
+
+        // 檢查字體是否載入完成
+        document.fonts.ready.then(() => {
+            loadingText.innerText = "請填寫左側資訊並點擊生成...";
+        });
+
+        generateBtn.addEventListener('click', () => {
+            const name = nameInput.value.trim();
+            const p1 = pledgeInput1.value.trim();
+            const p2 = pledgeInput2.value.trim();
+            const p3 = pledgeInput3.value.trim();
+
+            if (!name) {
+                alert("請輸入你的名字！");
+                return;
+            }
+            if (!p1 && !p2 && !p3) {
+                alert("請至少寫下一個具體行動喔！");
+                return;
+            }
+
+            loadingText.style.display = 'none';
+            currentName = name;
+            // 過濾掉空白的承諾，組成陣列
+            currentPledges = [p1, p2, p3].filter(p => p !== "");
+            
+            // 每次生成隨機切換主題
+            currentTheme = themes[Math.floor(Math.random() * themes.length)];
+            
+            // 確保字體載入後繪製
+            document.fonts.ready.then(() => {
+                drawCertificate(currentName, currentPledges, currentTheme);
+            });
+
+            styleTag.style.visibility = 'visible';
+            styleName.innerText = currentTheme.name;
+            downloadArea.style.display = 'block';
+            mobileTip.style.display = 'block';
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (!currentTheme) return;
+            
+            // 下載前強制重繪，解決可能的空白問題
+            document.fonts.ready.then(() => {
+                drawCertificate(currentName, currentPledges, currentTheme);
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.download = `希望村落證書_${currentName}.png`;
+                    link.href = canvas.toDataURL("image/png");
+                    link.click();
+                }, 100);
+            });
+        });
+
+        function drawCertificate(name, pledges, theme) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. 背景
+            ctx.fillStyle = theme.bg;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            addPaperTexture();
+
+            // 2. 邊框裝飾
+            if (theme.frameStyle === 'artNouveau') drawMuchaDecor(theme);
+            else if (theme.frameStyle === 'tech') drawSolarDecor(theme);
+            else drawEmberDecor(theme);
+
+            // 3. 標題與 Header
+            ctx.textAlign = "center";
+            ctx.font = "16px 'Zen Maru Gothic', sans-serif";
+            ctx.fillStyle = theme.id === 'mucha' ? "#888" : "rgba(255,255,255,0.6)";
+            ctx.letterSpacing = "2px";
+            ctx.fillText("HOPE VILLAGE PROJECT • FROM FORESTS TO THE SUN", canvas.width / 2, 70);
+            
+            // 主標題：使用 Noto Serif TC (襯線體)
+            ctx.font = "bold 42px 'Noto Serif TC', serif";
+            ctx.fillStyle = theme.primary;
+            ctx.shadowColor = theme.id === 'solarpunk' ? theme.secondary : "transparent";
+            ctx.shadowBlur = theme.id === 'solarpunk' ? 15 : 0;
+            ctx.fillText("能源顧問行動誓約", canvas.width / 2, 130);
+            ctx.shadowBlur = 0;
+
+            drawDivider(theme, canvas.width / 2, 160);
+
+            // 4. 誓約引導句與內文
+            ctx.fillStyle = theme.fontColor;
+            
+            // 左引號
+            ctx.font = "60px 'Noto Serif TC', serif";
+            ctx.fillStyle = theme.accent;
+            ctx.globalAlpha = 0.5;
+            ctx.textAlign = "left"; 
+            ctx.fillText("“", 120, 220); 
+            ctx.globalAlpha = 1.0;
+
+            // 固定引導句：使用 Zen Maru Gothic (圓體)
+            ctx.fillStyle = theme.fontColor;
+            ctx.font = "bold 28px 'Zen Maru Gothic', sans-serif"; 
+            ctx.textAlign = "left";
+            
+            // 讓文字區塊在畫面中間
+            const maxTextWidth = 500;
+            const startX = (canvas.width - maxTextWidth) / 2;
+            
+            // 繪製固定的標題
+            ctx.fillText("我承諾我能做到：", startX, 260);
+
+            // 繪製使用者的行動清單 (分項繪製)
+            let pledgeFontSize = 26;
+            ctx.font = `500 ${pledgeFontSize}px 'Zen Maru Gothic', sans-serif`; 
+            
+            let currentY = 310;
+            const lineHeight = 45; // 行距稍微加大
+
+            pledges.forEach((text, index) => {
+                const itemText = `${index + 1}. ${text}`;
+                ctx.fillText(itemText, startX, currentY);
+                currentY += lineHeight;
+            });
+
+            // 5. 簽署區域 (平衡版面)
+            const bottomY = 480; 
+            
+            // 學生 (左側)
+            ctx.textAlign = "center";
+            ctx.font = "16px 'Zen Maru Gothic', sans-serif";
+            ctx.fillStyle = theme.id === 'mucha' ? "#666" : "#aaa";
+            ctx.fillText("行動承諾人", canvas.width / 2 - 160, bottomY); 
+            
+            // 學生名字
+            ctx.save();
+            ctx.font = "42px 'Ma Shan Zheng', cursive"; 
+            ctx.fillStyle = theme.primary;
+            ctx.translate(canvas.width / 2 - 160, bottomY + 50);
+            ctx.rotate(-1 * Math.PI / 180);
+            ctx.fillText(name, 0, 0);
+            ctx.restore();
+
+            // 村長 (右側)
+            ctx.font = "16px 'Zen Maru Gothic', sans-serif";
+            ctx.fillStyle = theme.id === 'mucha' ? "#666" : "#aaa";
+            ctx.fillText("希望村落村長", canvas.width / 2 + 160, bottomY);
+
+            // 村長簽名
+            ctx.save();
+            ctx.font = "48px 'Great Vibes', cursive";
+            ctx.fillStyle = theme.id === 'mucha' ? theme.primary : theme.accent;
+            ctx.translate(canvas.width / 2 + 160, bottomY + 50);
+            ctx.rotate(-2 * Math.PI / 180); 
+            ctx.fillText("Lifang Ho", 0, 0);
+            ctx.restore();
+
+            // 日期：自動產生今天日期
+            const today = new Date();
+            const dateStr = `${today.getFullYear()} . ${(today.getMonth()+1).toString().padStart(2,'0')} . ${today.getDate().toString().padStart(2,'0')}`;
+            
+            ctx.font = "bold 16px 'Zen Maru Gothic', sans-serif";
+            ctx.fillStyle = theme.id === 'mucha' ? "#888" : "#888";
+            ctx.textAlign = "center"; 
+            ctx.letterSpacing = "1px";
+            ctx.fillText(`Date: ${dateStr}`, canvas.width / 2, 575);
+        }
+
+        // === 裝飾函數 ===
+        function drawDivider(theme, x, y) {
+            ctx.beginPath();
+            ctx.strokeStyle = theme.accent;
+            ctx.lineWidth = 2;
+            ctx.moveTo(x - 30, y);
+            ctx.lineTo(x + 30, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = theme.accent;
+            ctx.fill();
+        }
+
+        function drawMuchaDecor(theme) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, 130, 280, Math.PI, 0);
+            ctx.strokeStyle = "rgba(212, 175, 55, 0.2)";
+            ctx.lineWidth = 40;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, 130, 255, Math.PI, 0);
+            ctx.strokeStyle = theme.secondary;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.strokeStyle = theme.accent;
+            ctx.lineWidth = 5;
+            ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+            drawCorner(30, 30, 1, 1, theme.secondary);
+            drawCorner(canvas.width - 30, 30, -1, 1, theme.secondary);
+            drawCorner(30, canvas.height - 30, 1, -1, theme.secondary);
+            drawCorner(canvas.width - 30, canvas.height - 30, -1, -1, theme.secondary);
+            ctx.restore();
+        }
+
+        function drawCorner(x, y, scaleX, scaleY, color) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(scaleX, scaleY);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(50, 0, 50, 50);
+            ctx.quadraticCurveTo(0, 50, 0, 0);
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.2;
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(10, 10);
+            ctx.lineTo(80, 10);
+            ctx.moveTo(10, 10);
+            ctx.lineTo(10, 80);
+            ctx.strokeStyle = color;
+            ctx.globalAlpha = 1.0;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawSolarDecor(theme) {
+            ctx.save();
+            ctx.strokeStyle = "rgba(56, 189, 248, 0.1)";
+            ctx.lineWidth = 1;
+            for(let i=0; i<canvas.width; i+=40) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            ctx.strokeStyle = theme.secondary;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
+            ctx.fillStyle = theme.accent;
+            const size = 10;
+            ctx.fillRect(25, 25, size, size);
+            ctx.fillRect(canvas.width - 35, 25, size, size);
+            ctx.fillRect(25, canvas.height - 35, size, size);
+            ctx.fillRect(canvas.width - 35, canvas.height - 35, size, size);
+            ctx.restore();
+        }
+
+        function drawEmberDecor(theme) {
+            ctx.save();
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, theme.accent);
+            gradient.addColorStop(1, theme.primary);
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 20;
+            ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+            ctx.strokeStyle = "rgba(255,255,255,0.2)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
+            ctx.restore();
+        }
+
+        function addPaperTexture() {
+            ctx.save();
+            ctx.globalAlpha = 0.05;
+            for (let i = 0; i < canvas.width; i += 4) {
+                for (let j = 0; j < canvas.height; j += 4) {
+                    if (Math.random() > 0.5) {
+                        ctx.fillStyle = '#000';
+                        ctx.fillRect(i, j, 2, 2);
+                    }
+                }
+            }
+            ctx.restore();
+        }
+    });
+</script>
+
+</body>
+</html>
