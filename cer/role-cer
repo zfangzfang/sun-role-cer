@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>4.3 角色思辨 × 有條件 CER｜太陽能板進入山林</title>
+<style>
+  :root{
+    --bg:#f6f7fb;--card:#ffffff;--text:#0f172a;--muted:#6b7280;--border:#e5e7eb;
+    --primary:#2563eb;--primary-soft:#eef2ff;
+    --success:#16a34a;--success-soft:#ecfdf5;
+    --warn:#f59e0b;--warn-soft:#fffbeb;
+    --danger:#dc2626;--danger-soft:#fef2f2;
+    --review:#0ea5e9;--review-soft:#f0f9ff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Noto Sans TC",system-ui,Roboto;background:var(--bg);color:var(--text)}
+  .wrap{max-width:900px;margin:auto;padding:28px 16px 96px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;margin-top:18px;box-shadow:0 8px 22px rgba(2,8,23,.06)}
+  h1{margin:0 0 6px 0;color:var(--primary)}
+  h2{margin-top:0}
+  .muted{color:var(--muted)}
+  .step{display:none}
+  .step.active{display:block}
+  .nav{display:flex;justify-content:space-between;gap:12px;margin-top:16px}
+  button{padding:10px 16px;border:none;border-radius:12px;font-weight:700;cursor:pointer}
+  button.primary{background:var(--primary);color:#fff}
+  button.ghost{background:#e5e7eb}
+  select,textarea{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:14px;font-size:15px}
+  textarea{min-height:120px}
+  .notice{background:var(--success-soft);border-left:6px solid var(--success);padding:12px 14px;border-radius:12px}
+  .progress{display:flex;gap:8px;margin-top:12px}
+  .dot{width:10px;height:10px;border-radius:999px;background:#c7d2fe}
+  .dot.active{background:var(--primary)}
+  .sortable{list-style:none;padding:0;margin:12px 0;display:grid;gap:10px}
+  .sortable li{display:flex;align-items:center;gap:10px;padding:14px;border:1px dashed var(--border);border-radius:14px;background:#fff;cursor:grab}
+  .sortable li.dragging{opacity:.5}
+  .handle{font-weight:700;color:var(--primary)}
+  .rank{margin-left:auto;color:var(--muted);font-size:13px}
+  .ai{background:var(--review-soft);border:2px solid var(--review);border-radius:16px;padding:16px;margin-top:16px;display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>4.3 角色思辨 × 有條件 CER</h1>
+  <p class="muted">請站在不同角色的立場，思考「太陽能板進入山林」時，什麼才是你最在乎的。完成後，將延續 4.2 的方式，用 CER 與 AI 協作檢視你的論證。</p>
+
+  <!-- Step 1 -->
+  <div class="card step active" id="stepA">
+    <h2>Step 1｜選擇你的角色</h2>
+    <p class="muted">不同角色關心的事情不一樣，請先閱讀簡介，再選擇一個你要站上的位置。</p>
+    <ul class="muted">
+      <li><strong>長者</strong>：重視土地記憶與文化保存</li>
+      <li><strong>青年</strong>：關心能源轉型與未來發展</li>
+      <li><strong>觀光業者</strong>：在意地方經濟與產業機會</li>
+      <li><strong>環保團體代表</strong>：關心生態衝擊與長期風險</li>
+    </ul>
+    <select id="role">
+      <option value="">請選擇角色…</option>
+      <option>長者</option>
+      <option>青年</option>
+      <option>觀光業者</option>
+      <option>環保團體代表</option>
+    </select>
+    <div class="nav"><span></span><button class="primary" onclick="nextStep('A','B')">下一步</button></div>
+    <div class="progress"><span class="dot active"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="card step" id="stepB">
+    <h2>Step 2｜排序你最在乎的價值</h2>
+    <p class="muted">請拖曳排序，最上方代表你最在乎的。</p>
+    <ul id="valueList" class="sortable">
+      <li draggable="true" data-value="經濟效益"><span class="handle">☰</span> 經濟效益 <span class="rank"></span></li>
+      <li draggable="true" data-value="環境衝擊"><span class="handle">☰</span> 環境衝擊 <span class="rank"></span></li>
+      <li draggable="true" data-value="文化保存"><span class="handle">☰</span> 文化保存 <span class="rank"></span></li>
+    </ul>
+    <div class="nav"><button class="ghost" onclick="prevStep('B','A')">上一步</button><button class="primary" onclick="nextStep('B','C')">下一步</button></div>
+    <div class="progress"><span class="dot"></span><span class="dot active"></span><span class="dot"></span><span class="dot"></span></div>
+  </div>
+
+    <!-- Step 3 -->
+  <div class="card step" id="stepC">
+    <h2>Step 3｜形成你的「有條件」立場</h2>
+    <p class="muted">請先選擇你此刻的立場，完成選擇後，再產生你的立場摘要。</p>
+
+    <div class="stance-options" style="display:flex;gap:16px;margin:16px 0">
+      <label style="flex:1;padding:18px;border:2px solid var(--border);border-radius:16px;cursor:pointer;font-size:18px;font-weight:700">
+        <input type="radio" name="stance" value="support" style="margin-right:8px"> 我有條件支持
+      </label>
+      <label style="flex:1;padding:18px;border:2px solid var(--border);border-radius:16px;cursor:pointer;font-size:18px;font-weight:700">
+        <input type="radio" name="stance" value="oppose" style="margin-right:8px"> 我有條件反對
+      </label>
+    </div>
+
+    <button class="primary" onclick="applyStanceTemplate()">完成我的立場選擇</button>
+
+    <div class="notice" id="stanceResult" style="display:none;margin-top:16px">
+      <p id="summaryTextStep3"></p>
+    </div>
+
+    <div class="nav">
+      <button class="ghost" onclick="prevStep('C','B')">上一步</button>
+      <button class="primary" id="toCER" style="display:none" onclick="nextStep('C','D')">進入 CER</button>
+    </div>
+    <div class="progress"><span class="dot"></span><span class="dot"></span><span class="dot active"></span><span class="dot"></span></div>
+  </div>
+
+
+  
+    
+
+  <!-- Step 4 CER -->
+  <div class="card step" id="stepD">
+    <h2>Step 4｜用 CER 思考你的「有條件」立場</h2>
+    <p class="muted">這一步不是單純列出理由，而是進一步思考：<br>「在什麼條件下，我會支持？又在什麼情況下，我其實不會支持？」或「雖然我反對，但當哪些條件被滿足時，我可能不再反對？」</p>
+    <p class="muted">請以下方 CER 協助你把這些「條件」說清楚。</p>
+<p class="muted">請以剛剛的立場摘要為基礎，完成下列 CER。</p>
+    <label>C｜Claim（主張）</label>
+    <textarea id="claim"></textarea>
+    <label>E｜Evidence（證據）</label>
+    <p class="muted">請提供能支持你「在某些條件下支持／反對」的具體證據（資料、案例、觀察）。</p>
+    <textarea id="evidence"></textarea>
+
+    <label>R｜Reasoning（推理：條件思辨）</label>
+    <p class="muted">請說明：<br>① 在<strong>哪些條件下</strong>，你的立場成立？<br>② 又在<strong>什麼情況下</strong>，這個立場可能需要被修正或調整？</p>
+    <div class="notice">
+      <strong>🧠 示範（與本議題無關）：</strong><br>
+      ・如果學校規定學生可以自由使用手機，<strong>那麼</strong>我支持學生帶手機到學校；<br>
+      ・<strong>但是當</strong>手機影響上課專心或造成同學衝突時，我就不支持。<br><br>
+      ・如果公車班次充足且安全，<strong>那麼</strong>我支持學生搭公車上學；<br>
+      ・<strong>但是當</strong>班次太少或回家太晚時，這個立場就需要調整。
+    </div>
+    <p class="muted">請嘗試使用「如果……那麼……；但是當……時……」來說明你的想法。</p>
+    <textarea id="reasoning"></textarea>
+    <div class="notice" style="background:var(--review-soft);border-left:6px solid var(--review);margin-top:12px">
+      <strong>🧭 在按下 AI 檢查前，請先問問自己：</strong><br>
+      ・我的「證據」，真的有回應我最在乎的那個價值嗎？<br>
+      ・我是否清楚寫出：<br>
+      &nbsp;&nbsp;① 什麼情況下，我會支持／反對？<br>
+      &nbsp;&nbsp;② 什麼情況下，我其實會改變想法？<br>
+      ・這段話是我自己的思考，還是只是套用「如果／但是」的句型？<br>
+      <span class="muted">如果其中有一題你回答得不太確定，代表這裡還可以再修一次。</span>
+    </div>
+    <button class="primary" onclick="checkCER()">🤖 請 AI 協助檢查（有條件檢視）</button>
+    <div class="ai" id="aiBox">
+      <h3 style="display:flex;align-items:center;gap:8px">🤖 AI 條件思辨檢視回饋 <span id="aiStatusBadge" style="font-size:14px;padding:4px 10px;border-radius:999px;background:#e5e7eb;color:#374151">尚未檢查</span></h3>
+
+      <hr style="margin:12px 0">
+      <h3>🧾 你的目前完整 CER（整理預覽）</h3>
+      <div id="cerPreview" style="display:grid;gap:12px"></div>
+
+      <hr style="margin:16px 0">
+      <ul>
+        <li id="fbC"></li>
+        <li id="fbE"></li>
+        <li id="fbR"></li>
+      </ul>
+      <p class="muted" id="fbJudge"></p>
+      <p class="notice" id="fbHint"></p>
+
+      <div class="notice" id="aiRevision" style="display:none;margin-top:12px;background:var(--warn-soft);border-left:6px solid var(--warn)"></div>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">
+        <button class="ghost" onclick="copyCER()">📋 複製目前版本（含 AI 回饋）</button>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script>
+function showStep(id){document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));document.getElementById('step'+id).classList.add('active');}
+function nextStep(from,to){showStep(to);}function prevStep(from,to){showStep(to);} 
+// Drag sort
+const list=document.getElementById('valueList');let dragging=null;
+list.addEventListener('dragstart',e=>{if(e.target.tagName==='LI'){dragging=e.target;dragging.classList.add('dragging')}});
+list.addEventListener('dragend',()=>{if(dragging){dragging.classList.remove('dragging');dragging=null;updateRanks();}});
+list.addEventListener('dragover',e=>{e.preventDefault();const after=getAfter(list,e.clientY);if(after==null)list.appendChild(dragging);else list.insertBefore(dragging,after);});
+function getAfter(container,y){const els=[...container.querySelectorAll('li:not(.dragging)')];return els.reduce((c,el)=>{const b=el.getBoundingClientRect();const o=y-b.top-b.height/2;return o<0&&o>c.offset?{offset:o,element:el}:c;},{offset:Number.NEGATIVE_INFINITY}).element;}
+function updateRanks(){[...list.children].forEach((li,i)=>li.querySelector('.rank').textContent=`順位 ${i+1}`);}updateRanks();
+function applyStanceTemplate(){
+  const role=document.getElementById('role').value||'（角色）';
+  const stance=document.querySelector('input[name="stance"]:checked');
+  if(!stance) return alert('請先選擇立場');
+
+  const values=[...list.children].map(li=>li.dataset.value);
+  const top=values[0];
+
+  const text = stance.value==='support'
+    ? `身為${role}，我在思考「太陽能板進入山林」時，最在乎的是「${top}」，因此我目前的立場是：我有條件支持太陽能板進入山林。`
+    : `身為${role}，我在思考「太陽能板進入山林」時，最在乎的是「${top}」，因此我目前的立場是：我有條件反對太陽能板進入山林。`;
+
+  // 顯示立場摘要（Step 3 內）
+  document.getElementById('summaryTextStep3').textContent = text;
+  document.getElementById('stanceResult').style.display = 'block';
+
+  // 預填 CER Claim
+  document.getElementById('claim').value = text;
+
+  // 顯示「進入 CER」按鈕
+  document.getElementById('toCER').style.display = 'inline-block';
+}
+function checkCER(){
+  // ===== 價值 × 關鍵詞對齊規則 =====
+  const valueKeywords = {
+    '環境衝擊': ['生態','污染','水土','山坡','破壞','環境'],
+    '文化保存': ['文化','聚落','石板屋','傳統','景觀','歷史'],
+    '經濟效益': ['收入','觀光','產業','成本','就業','經濟']
+  };
+  const c=document.getElementById('claim').value.trim();
+  const e=document.getElementById('evidence').value.trim();
+  const r=document.getElementById('reasoning').value.trim();
+
+  document.getElementById('fbC').textContent = c.includes('有條件')
+    ? '✔ 主張：已明確表達「有條件」立場'
+    : '△ 主張：請確認是否清楚說出「有條件支持／反對」';
+
+    const values=[...document.querySelectorAll('#valueList li')].map(li=>li.dataset.value);
+  const topValue = values[0];
+  const keywords = valueKeywords[topValue] || [];
+  const evidenceMatch = keywords.some(k=>e.includes(k));
+
+  if(e.length < 20){
+    document.getElementById('fbE').textContent = '⚠ 證據：內容過於簡短，請補充具體資料或案例';
+  }else if(evidenceMatch){
+    document.getElementById('fbE').textContent = `✔ 證據：內容有對應你最在乎的價值（${topValue}）`;
+  }else{
+    document.getElementById('fbE').textContent = `△ 證據：有描述，但與你選擇的核心價值（${topValue}）連結不明確`;
+  }
+
+    const hasIf = r.includes('如果');
+  const hasBut = r.includes('但是') || r.includes('但當');
+
+  // 模板相似度提醒（非判斷）
+  const templateHints = ['如果……那麼……','但是當……時','如果','那麼','但是當'];
+  const templateHitCount = templateHints.filter(t => r.includes(t)).length;
+  const possibleTemplateOnly = templateHitCount >= 3 && r.length < 80;
+
+  let needRevision = false;
+
+      if(hasIf && hasBut && evidenceMatch){
+    document.getElementById('fbR').textContent = '✔ 推理：你同時說明了立場成立與需要修正的條件';
+    document.getElementById('fbJudge').textContent = '🟢 判斷：這是一個「真有條件」的立場。';
+    document.getElementById('aiStatusBadge').textContent = '✔ 通過';
+    document.getElementById('aiStatusBadge').style.background = 'var(--success-soft)';
+    document.getElementById('aiStatusBadge').style.color = 'var(--success)';
+        if(possibleTemplateOnly){
+      document.getElementById('fbHint').textContent = '你已符合有條件思辨的結構要求。不過你的推理句型與示範非常相近，請確認這是你自己的想法，而不只是套用句型。';
+    }else{
+      document.getElementById('fbHint').textContent = '你已清楚說明立場會在什麼情況下成立，也知道它在哪些情況下需要調整。這正是有條件思辨的關鍵。';
+    }
+    }else if(hasIf || hasBut){
+    needRevision = true;
+    document.getElementById('fbR').textContent = '△ 推理：已有條件語句，但仍缺少另一種情況的說明';
+    document.getElementById('fbJudge').textContent = '🟡 判斷：目前是「半有條件」的立場。';
+    document.getElementById('aiStatusBadge').textContent = '△ 需補充';
+    document.getElementById('aiStatusBadge').style.background = 'var(--warn-soft)';
+    document.getElementById('aiStatusBadge').style.color = 'var(--warn)';
+    document.getElementById('fbHint').textContent = '請補上另一種會讓你立場改變或需要調整的情境。';
+  }else{
+    needRevision = true;
+    document.getElementById('fbR').textContent = '⚠ 推理：尚未看出條件轉折';
+    document.getElementById('fbJudge').textContent = '🔴 判斷：目前較接近「假有條件」立場。';
+    document.getElementById('aiStatusBadge').textContent = '✖ 未通過';
+    document.getElementById('aiStatusBadge').style.background = 'var(--danger-soft)';
+    document.getElementById('aiStatusBadge').style.color = 'var(--danger)';
+    document.getElementById('fbHint').textContent = '請嘗試補上「如果……那麼……；但是當……時……」的轉折說明。';
+  }
+
+  const previewBox = document.getElementById('cerPreview');
+  previewBox.innerHTML = `
+    <div class="notice"><strong>🟦 Claim｜你的立場</strong><br>${c || '（尚未填寫）'}</div>
+    <div class="notice"><strong>🟨 Evidence｜支持條件的證據</strong><br>${e || '（尚未填寫）'}</div>
+    <div class="notice"><strong>🟩 Reasoning｜你的有條件思考</strong><br>${r || '（尚未填寫）'}</div>
+  `;
+
+  if(needRevision){
+    document.getElementById('aiRevision').style.display='block';
+    document.getElementById('aiRevision').innerHTML = '<strong>🛠 修正提醒</strong><br>請根據上方提示，直接回到 Reasoning 修改內容後，再次點擊「AI 協助檢查」。';
+  }else{
+    document.getElementById('aiRevision').style.display='none';
+  }
+
+  document.getElementById('aiBox').style.display='block';
+}
+
+function copyCER(){
+  const text = document.getElementById('cerPreview').textContent;
+  navigator.clipboard.writeText(text);
+  alert('已複製目前 CER 版本');
+}
+
+function askAIRevision(){
+  document.getElementById('aiRevision').style.display='block';
+  document.getElementById('aiRevision').innerHTML = '<strong>🤖 AI 修正建議（方向性）</strong><br>請檢視你的 Reasoning：<br>① 是否同時說明了「立場成立」與「需要修正」的條件？<br>② 是否有一種情況，是你尚未考慮但可能影響立場？<br><br>請依此建議，回到上方修正你的文字，再次進行 AI 檢查。';
+}
+</script>
+</body>
+</html>
