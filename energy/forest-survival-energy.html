@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🏔️ 山林生存大師 - 初級能源互動遊戲</title>
+    <meta name="description" content="運用初級能源解決生存難題。一個關於能源與生存的互動小遊戲。">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="🏔️ 山林生存大師">
+    <meta property="og:description" content="運用初級能源解決生存難題。試試看找出所有的解法！">
+
+    <!-- Favicon (使用 Emoji) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏔️</text></svg>">
+
+    <style>
+        :root {
+            --bg-color: #8D6E63;
+            --card-bg: #FDF5E6;
+            --primary-color: #5D4037;
+            --accent-color: #E65100;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, -apple-system, "Microsoft JhengHei", "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        /* 遊戲主容器 */
+        #mountain-survival-v2 {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            user-select: none;
+            position: relative;
+            border: 4px solid #D7CCC8;
+        }
+
+        /* 標題區 */
+        .ms-header {
+            border-bottom: 2px solid #D7CCC8;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .ms-title {
+            margin: 0;
+            color: var(--primary-color);
+            font-size: clamp(24px, 5vw, 32px); /* 響應式字體 */
+            font-weight: 800;
+        }
+        .ms-subtitle {
+            color: #795548;
+            font-size: clamp(14px, 3vw, 18px);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+        .ms-progress { 
+            font-weight: bold;
+            color: var(--accent-color);
+            font-size: 20px; 
+            background: rgba(255,255,255,0.6);
+            padding: 5px 20px; 
+            border-radius: 20px;
+            margin-top: 10px;
+            border: 1px solid #FFCC80;
+        }
+
+        /* 任務卡片區 */
+        .ms-tasks-wrapper {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-items: center;
+        }
+
+        .ms-task-card {
+            background: white;
+            border: 3px dashed #BCAAA4;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 200px;
+            height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-sizing: border-box;
+        }
+
+        .ms-task-card.hover {
+            background: #E0F2F1;
+            border-color: #26A69A;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(38, 166, 154, 0.3);
+        }
+        .ms-task-card.solved {
+            border-style: solid;
+            border-color: #FFCA28;
+            background: #FFF8E1;
+            animation: pulse 0.5s;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .ms-task-content { text-align: center; pointer-events: none; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+        .ms-task-icon { font-size: 50px; margin-bottom: 10px; line-height: 1; }
+        .ms-task-text { font-size: 18px; font-weight: bold; color: var(--primary-color); line-height: 1.4; }
+
+        .ms-hint-btn {
+            font-size: 14px; color: #1565C0; cursor: pointer;
+            border: 1px solid #BBDEFB; padding: 6px 15px; border-radius: 20px;
+            background: #E3F2FD; transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .ms-hint-btn:hover { background: #BBDEFB; transform: translateY(-2px); }
+        
+        .ms-feedback {
+            position: absolute; top: -10px; right: -10px;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: #66BB6A; color: white;
+            font-size: 20px; font-weight: bold;
+            display: none; align-items: center; justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border: 2px solid white;
+        }
+
+        /* 能源背包區 (Dock) */
+        .ms-sources-dock {
+            background: #6D4C41;
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .ms-dock-header {
+            font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 15px; opacity: 0.9;
+        }
+        .ms-sources-list {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .ms-source-item {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            width: 90px;
+            height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            transition: transform 0.2s;
+            touch-action: none; /* 關鍵：防止手機拖曳時滾動頁面 */
+            user-select: none;
+        }
+        .ms-source-item:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+            background: rgba(255,255,255,0.25);
+            border-color: white;
+        }
+        
+        .ms-item-icon { font-size: 36px; pointer-events: none; margin-bottom: 5px; }
+        .ms-item-name { font-size: 14px; font-weight: bold; text-align: center; pointer-events: none; line-height: 1.2; }
+
+        /* 模態視窗 (Modal) */
+        .ms-modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none; 
+            justify-content: center; align-items: center; z-index: 50;
+            backdrop-filter: blur(2px);
+            border-radius: 18px; /* 跟隨主容器圓角 */
+            animation: fadeIn 0.3s;
+        }
+        .ms-modal-content {
+            background: white; padding: 30px; border-radius: 20px; text-align: center;
+            width: 85%; max-width: 400px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            transform: scale(0.9); animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .ms-big-icon { font-size: 60px; margin-bottom: 15px; }
+        #ms-modal-title { margin: 0 0 10px 0; color: var(--accent-color); font-size: 24px; }
+        #ms-modal-text { color: #333; font-size: 18px; margin-bottom: 25px; line-height: 1.6; }
+        #ms-modal-close {
+            background: #1976D2; color: white; border: none; padding: 12px 30px;
+            border-radius: 30px; cursor: pointer; font-size: 18px; font-weight: bold;
+            box-shadow: 0 4px 10px rgba(25, 118, 210, 0.3);
+            transition: transform 0.1s;
+        }
+        #ms-modal-close:active { transform: scale(0.95); }
+
+        /* 成功通關畫面 */
+        .ms-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(62, 39, 35, 0.95);
+            display: none; justify-content: center; align-items: center; z-index: 100;
+            text-align: center; color: white; padding: 20px;
+            border-radius: 16px;
+            box-sizing: border-box;
+            animation: fadeIn 0.5s;
+        }
+        .ms-success-box h2 { font-size: 28px; color: #FFD54F; margin-bottom: 20px; }
+        .ms-success-box p { font-size: 18px; line-height: 1.6; opacity: 0.9; }
+        #ms-restart-btn {
+            background: #FFCA28; color: #3E2723; border: none; padding: 15px 40px;
+            font-size: 20px; border-radius: 50px; cursor: pointer; font-weight: bold; margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(255, 202, 40, 0.4);
+            transition: transform 0.1s;
+        }
+        #ms-restart-btn:active { transform: scale(0.95); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popUp { to { transform: scale(1); } }
+
+        /* RWD 手機版調整 */
+        @media (max-width: 600px) {
+            body { padding: 10px; align-items: flex-start; }
+            #mountain-survival-v2 { padding: 15px; margin-top: 10px; }
+            .ms-task-card { height: 180px; }
+            .ms-task-icon { font-size: 40px; }
+            .ms-task-text { font-size: 16px; }
+            .ms-source-item { width: 75px; height: 75px; }
+            .ms-item-icon { font-size: 30px; }
+            .ms-item-name { font-size: 12px; }
+            .ms-dock-header { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="mountain-survival-v2">
+        
+        <div class="ms-header">
+            <h3 class="ms-title">🏔️ 山林生存大師</h3>
+            <p class="ms-subtitle">運用初級能源解決生存難題。有些問題可能有<b>一種以上</b>的解法，試試看！</p>
+            <div class="ms-progress">生存進度：<span id="ms-score">0</span> / 4</div>
+        </div>
+    
+        <div class="ms-stage">
+            
+            <div class="ms-tasks-wrapper">
+                
+                <div class="ms-task-card" data-task="warmth">
+                    <div class="ms-task-content">
+                        <div class="ms-task-icon">🥶</div>
+                        <div class="ms-task-text">好冷！<br>需要熱量</div>
+                    </div>
+                    <div class="ms-hint-btn" title="聽聽長老的建議">💡 提示</div>
+                    <div class="ms-feedback">✓</div>
+                </div>
+    
+                <div class="ms-task-card" data-task="food">
+                    <div class="ms-task-content">
+                        <div class="ms-task-icon">🐟</div>
+                        <div class="ms-task-text">生魚！<br>需要保存</div>
+                    </div>
+                    <div class="ms-hint-btn" title="聽聽長老的建議">💡 提示</div>
+                    <div class="ms-feedback">✓</div>
+                </div>
+    
+                <div class="ms-task-card" data-task="mill">
+                    <div class="ms-task-content">
+                        <div class="ms-task-icon">🌾</div>
+                        <div class="ms-task-text">穀物！<br>需要脫殼</div>
+                    </div>
+                    <div class="ms-hint-btn" title="聽聽長老的建議">💡 提示</div>
+                    <div class="ms-feedback">✓</div>
+                </div>
+    
+                <div class="ms-task-card" data-task="dry">
+                    <div class="ms-task-content">
+                        <div class="ms-task-icon">👕</div>
+                        <div class="ms-task-text">濕衣！<br>需要弄乾</div>
+                    </div>
+                    <div class="ms-hint-btn" title="聽聽長老的建議">💡 提示</div>
+                    <div class="ms-feedback">✓</div>
+                </div>
+    
+            </div>
+    
+            <div class="ms-sources-dock">
+                <div class="ms-dock-header">🎒 初級能源背包 (請拖曳使用)</div>
+                <div class="ms-sources-list">
+                    <div class="ms-source-item" draggable="true" data-type="biomass" data-icon="🪵">
+                        <div class="ms-item-icon">🪵</div>
+                        <div class="ms-item-name">木材<br>(生質能)</div>
+                    </div>
+                    <div class="ms-source-item" draggable="true" data-type="solar" data-icon="☀️">
+                        <div class="ms-item-icon">☀️</div>
+                        <div class="ms-item-name">陽光<br>(太陽能)</div>
+                    </div>
+                    <div class="ms-source-item" draggable="true" data-type="hydro" data-icon="💧">
+                        <div class="ms-item-icon">💧</div>
+                        <div class="ms-item-name">溪流<br>(水力)</div>
+                    </div>
+                    <div class="ms-source-item" draggable="true" data-type="wind" data-icon="🌬️">
+                        <div class="ms-item-icon">🌬️</div>
+                        <div class="ms-item-name">強風<br>(風力)</div>
+                    </div>
+                </div>
+            </div>
+    
+        </div>
+    
+        <div id="ms-message-modal" class="ms-modal">
+            <div class="ms-modal-content">
+                <div id="ms-modal-icon" class="ms-big-icon">🎉</div>
+                <h3 id="ms-modal-title">標題</h3>
+                <p id="ms-modal-text">內容</p>
+                <button id="ms-modal-close">我懂了</button>
+            </div>
+        </div>
+    
+        <div id="ms-success-overlay" class="ms-overlay">
+            <div class="ms-success-box">
+                <div style="font-size: 60px; margin-bottom: 20px;">🏆</div>
+                <h2>生存大師成就達成！</h2>
+                <p>你發現了嗎？大自然的力量往往不只一種用法。<br>靈活運用各種初級能源，是生存的關鍵。</p>
+                <button id="ms-restart-btn">🔄 再玩一次</button>
+            </div>
+        </div>
+    
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let score = 0;
+            const total = 4;
+            const scoreEl = document.getElementById('ms-score');
+            const modal = document.getElementById('ms-message-modal');
+            const overlay = document.getElementById('ms-success-overlay');
+            const restartBtn = document.getElementById('ms-restart-btn');
+            const modalCloseBtn = document.getElementById('ms-modal-close');
+            
+            const modalIcon = document.getElementById('ms-modal-icon');
+            const modalTitle = document.getElementById('ms-modal-title');
+            const modalText = document.getElementById('ms-modal-text');
+    
+            // 🧠 核心：多重解答邏輯庫 (Matrix Logic)
+            const logicMatrix = {
+                'warmth': { // 任務：取暖
+                    'biomass': { correct: true, title: "生火成功！", text: "燃燒木材是人類最古老的取暖方式，晚上也有效喔！(生質能 -> 熱能)" },
+                    'solar': { correct: true, title: "溫暖的陽光！", text: "雖然很舒服，但太陽下山後就沒用了，記得要趕快找掩蔽。(輻射熱)" },
+                    'hint': "晚上會很冷，需要一個能持續發光發熱的東西。或者白天找個無遮蔽的地方..."
+                },
+                'food': { // 任務：保存食物 (生魚)
+                    'solar': { correct: true, title: "製作魚乾！", text: "利用太陽熱能蒸發水分，細菌就不容易滋生。(熱能脫水)" },
+                    'biomass': { correct: true, title: "煙燻魚肉！", text: "生火煙燻也是保存食物的好方法，還會有獨特風味喔！(熱能 + 煙燻)" },
+                    'hint': "食物腐敗是因為水分和細菌。想想看如何把水分弄掉？曬乾或烤乾？"
+                },
+                'mill': { // 任務：脫殼/磨粉
+                    'hydro': { correct: true, title: "水力磨坊！", text: "水流推動大石磨，輕鬆就能把穀物去殼。(位能或動能 -> 機械能)" },
+                    'wind': { correct: true, title: "風車磨坊！", text: "只要風夠大，風車也能帶動石磨喔！(動能 -> 動能)" },
+                    'hint': "石磨非常重，光靠人力推不動。想想看自然界有什麼東西在「流動」時會有力氣？"
+                },
+                'dry': { // 任務：曬衣
+                    'wind': { correct: true, title: "風乾！", text: "強風帶走水氣，衣服很快就乾了。(對流)" },
+                    'solar': { correct: true, title: "曬乾！", text: "太陽的熱氣蒸發水分，還有殺菌效果呢！(熱能)" },
+                    'hint': "要把水變不見。可以用熱，也可以用吹的..."
+                }
+            };
+    
+            // Drag & Drop Setup
+            const draggables = document.querySelectorAll('.ms-source-item');
+            const dropzones = document.querySelectorAll('.ms-task-card');
+    
+            // Hint Buttons
+            document.querySelectorAll('.ms-hint-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const task = btn.parentElement.dataset.task;
+                    showModal("👴 長老說...", logicMatrix[task].hint, "🤔");
+                });
+            });
+    
+            // Desktop Drag Events
+            draggables.forEach(item => {
+                item.addEventListener('dragstart', e => {
+                    e.dataTransfer.setData('type', item.dataset.type);
+                    item.style.opacity = '0.4';
+                });
+                item.addEventListener('dragend', () => item.style.opacity = '1');
+            });
+    
+            dropzones.forEach(zone => {
+                zone.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    if(!zone.classList.contains('solved')) zone.classList.add('hover');
+                });
+                zone.addEventListener('dragleave', () => zone.classList.remove('hover'));
+                zone.addEventListener('drop', e => {
+                    e.preventDefault();
+                    zone.classList.remove('hover');
+                    if(zone.classList.contains('solved')) return;
+                    const type = e.dataTransfer.getData('type');
+                    processAttempt(zone, type);
+                });
+            });
+    
+            // Mobile Touch Events Logic
+            let touchItem = null, startX, startY, initialX, initialY;
+            
+            draggables.forEach(item => {
+                item.addEventListener('touchstart', (e) => {
+                    // 不要在這裡 preventDefault，否則可能無法點擊
+                    const touch = e.touches[0];
+                    touchItem = item;
+                    
+                    // 記錄初始位置和觸控點
+                    const rect = item.getBoundingClientRect();
+                    initialX = rect.left;
+                    initialY = rect.top;
+                    startX = touch.clientX; 
+                    startY = touch.clientY;
+                    
+                    // 設置拖曳樣式
+                    item.style.position = 'fixed';
+                    item.style.left = initialX + 'px';
+                    item.style.top = initialY + 'px';
+                    item.style.width = rect.width + 'px'; // 保持寬度
+                    item.style.zIndex = 1000;
+                    item.style.opacity = '0.8';
+                    item.style.transform = 'scale(1.1)';
+                    item.style.pointerEvents = 'none'; // 關鍵：讓觸控點能穿透元素偵測下方的 dropzone
+                }, {passive: false});
+                
+                item.addEventListener('touchmove', (e) => {
+                    if(!touchItem) return;
+                    e.preventDefault(); // 防止滾動
+                    const touch = e.touches[0];
+                    const dx = touch.clientX - startX;
+                    const dy = touch.clientY - startY;
+                    
+                    // 移動元素
+                    touchItem.style.left = (initialX + dx) + 'px';
+                    touchItem.style.top = (initialY + dy) + 'px';
+
+                    // 視覺回饋：檢查是否在合法的 dropzone 上
+                    // 暫時恢復 pointerEvents 來檢測下方元素 (這是一個技巧，但在這裡我們用 elementFromPoint)
+                    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const zone = elementBelow ? elementBelow.closest('.ms-task-card') : null;
+                    
+                    // 清除所有 hover 狀態
+                    dropzones.forEach(z => z.classList.remove('hover'));
+                    if (zone && !zone.classList.contains('solved')) {
+                        zone.classList.add('hover');
+                    }
+
+                }, {passive: false});
+    
+                item.addEventListener('touchend', (e) => {
+                    if(!touchItem) return;
+                    
+                    const touch = e.changedTouches[0];
+                    // 恢復樣式
+                    touchItem.style.pointerEvents = 'auto';
+                    touchItem.style.position = '';
+                    touchItem.style.left = '';
+                    touchItem.style.top = '';
+                    touchItem.style.width = '';
+                    touchItem.style.zIndex = '';
+                    touchItem.style.opacity = '1';
+                    touchItem.style.transform = '';
+                    
+                    // 檢測放置位置
+                    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const zone = elementBelow ? elementBelow.closest('.ms-task-card') : null;
+                    
+                    dropzones.forEach(z => z.classList.remove('hover'));
+                    
+                    if(zone && !zone.classList.contains('solved')) {
+                        processAttempt(zone, touchItem.dataset.type);
+                    }
+                    
+                    touchItem = null;
+                });
+            });
+    
+            // 🧠 處理邏輯
+            function processAttempt(zone, inputType) {
+                const task = zone.dataset.task;
+                if (!logicMatrix[task] || !logicMatrix[task][inputType]) {
+                    // 錯誤回饋動畫
+                    zone.animate([
+                        { transform: 'translateX(0)' },
+                        { transform: 'translateX(-10px)' },
+                        { transform: 'translateX(10px)' },
+                        { transform: 'translateX(0)' }
+                    ], {
+                        duration: 300,
+                        easing: 'ease-in-out'
+                    });
+                    return;
+                }
+
+                const logic = logicMatrix[task][inputType];
+    
+                if (logic && logic.correct) {
+                    // ✅ 答對了
+                    zone.classList.add('solved');
+                    
+                    // 視覺回饋：改變圖示為該能源
+                    const sourceIcon = document.querySelector(`.ms-source-item[data-type="${inputType}"] .ms-item-icon`).innerText;
+                    zone.querySelector('.ms-task-icon').innerText = sourceIcon;
+                    zone.querySelector('.ms-task-text').innerText = logic.title;
+                    
+                    // 顯示打勾
+                    zone.querySelector('.ms-feedback').style.display = 'flex';
+                    zone.querySelector('.ms-feedback').innerText = "✓";
+                    
+                    // 隱藏提示按鈕
+                    zone.querySelector('.ms-hint-btn').style.display = 'none';
+    
+                    // 顯示詳細知識
+                    showModal(logic.title, logic.text, "🎉");
+    
+                    score++;
+                    scoreEl.innerText = score;
+                    if(score === total) {
+                        setTimeout(() => {
+                            overlay.style.display = 'flex';
+                            confettiEffect(); // 簡單的慶祝效果
+                        }, 1000);
+                    }
+                }
+            }
+    
+            function showModal(title, text, icon) {
+                modalTitle.innerText = title;
+                modalText.innerText = text;
+                modalIcon.innerText = icon;
+                modal.style.display = 'flex';
+            }
+
+            function confettiEffect() {
+                // 這裡可以加入 canvas 慶祝效果，保持簡單則留空
+            }
+    
+            modalCloseBtn.addEventListener('click', () => modal.style.display = 'none');
+            
+            // 點擊遮罩也可關閉 Modal
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.style.display = 'none';
+            });
+
+            restartBtn.addEventListener('click', () => {
+                score = 0; 
+                scoreEl.innerText = 0;
+                overlay.style.display = 'none';
+                dropzones.forEach(zone => {
+                    zone.classList.remove('solved');
+                    zone.querySelector('.ms-feedback').style.display = 'none';
+                    zone.querySelector('.ms-hint-btn').style.display = 'block';
+                    
+                    // 恢復原始文字
+                    const task = zone.dataset.task;
+                    const originals = {
+                        'warmth': {icon: '🥶', text: '好冷！<br>需要熱量'},
+                        'food': {icon: '🐟', text: '生魚！<br>需要保存'},
+                        'mill': {icon: '🌾', text: '穀物！<br>需要脫殼'},
+                        'dry': {icon: '👕', text: '濕衣！<br>需要弄乾'}
+                    };
+                    if(originals[task]) {
+                        zone.querySelector('.ms-task-icon').innerText = originals[task].icon;
+                        zone.querySelector('.ms-task-text').innerHTML = originals[task].text;
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
